@@ -40,6 +40,8 @@
         }
     },
     "extra": {
+        "name": "Burton (Protosite)",
+        "handle": "burton",
         "class": "simplicateca\\burton\\Burton"
     }
 }
