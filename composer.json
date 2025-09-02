@@ -11,10 +11,6 @@
     "support": {
         "email" : "info@simplicate.ca"
     },
-    "repositories": [{
-        "type": "vcs",
-        "url": "https://github.com/simplicateca/burton-theme-solo"
-    }],
     "require": {
         "craftcms/cms": "^5.4.8",
         "craftcms/ckeditor": "^4.3.0",
