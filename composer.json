@@ -1,5 +1,5 @@
 {
-    "name": "simplicateca/burton-protosite",
+    "name": "simplicateca/craft-burton-protosite",
     "description": "Burton is a Craft CMS 5+ Protosite",
     "type": "craft-plugin",
     "keywords": ["craft-cms", "theme", "custom-theme", "protosite", "atomic-design"],
@@ -26,14 +26,17 @@
         "verbb/navigation": "^3.0.11",
         "mmikkel/retcon": "^3.2.1"
     },
+    "config": {
+        "allow-plugins": {
+            "craftcms/plugin-installer": true,
+            "yiisoft/yii2-composer": true
+        },
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
     "autoload": {
         "psr-4": {
             "simplicateca\\burton\\": "src/"
         }
-    },
-    "extra": {
-        "name": "Burton Protosite",
-        "handle": "burton",
-        "class": "simplicateca\\burton\\Burton"
     }
 }
