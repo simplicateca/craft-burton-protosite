@@ -1,0 +1,85 @@
+{## [Core] Media Elements
+{-------------------------------------------------------------------------------------##}
+{%- extends "_burton/partial" -%}
+
+
+{## Template Variables
+{-------------------------------------------------------------------------------------##}
+{%- set medias = medias ?? media ?? null -%}
+
+
+{## Default Configuration
+{---------------------------------------------------------------------------------------}
+{-------------------------------------------------------------------------------------##}
+{% block audio__class        audio__class       ?? "block w-full max-w-4xl bg-[#f1f3f4]" -%}
+{% block audio__posterclass  audio__posterclass ?? "block w-full h-48" -%}
+{% block audio__figureclass  audio__figureclass ?? "flex flex-col w-full" -%}
+
+{% block video__class        video__class       ?? "w-full aspect-video" -%}
+{% block video__posterclass  video__posterclass ?? "absolute inset-0 z-20 object-cover aspect-video" -%}
+{% block video__figureclass  video__figureclass ?? "relative aspect-video w-full" -%}
+
+{% block iframe__class       iframe__class      ?? "w-full h-auto" -%}
+
+
+{## Render HTML
+{---------------------------------------------------------------------------------------}
+    This is where the actual HTML is generated for whatever type of media is being
+    rendered: <video>. <audio>, <iframe>, etc.
+{-------------------------------------------------------------------------------------##}
+{%- block output -%}
+    {%- set type = element.kind ??? element.type.handle ?? element.type ?? 'unknown' -%}
+    {{- type == 'embed' ? block('oembed') -}}
+    {{- type == 'audio' ? block('audio')  -}}
+    {{- type == 'video' ? block('video')  -}}
+    {{- type == 'code'  ? raw( media.code ) -}}
+{%- endblock -%}
+
+
+{%- block oembed -%}
+    {%- set oembed = MediaBase( element.website.url ) -%}
+    {{- oembed.code ?? null ? oembed.code | retconAttr( 'iframe', {
+        class : ["source__#{oembed.provider ?? 'unknown'} w-full", oembed.ratio ?? null == 56.5 ? "aspect-video" ],
+        height: false,
+        width : false,
+    } ) -}}
+{%- endblock -%}
+
+
+{%- block audio -%}
+    {{- element ? tag( 'audio', {
+        id      : "audio#{random()}",
+        controls: true,
+        preload : true,
+        class   : "aspect-audio w-full",
+        html    : block('source')
+    } ) -}}
+{%- endblock -%}
+
+
+{% block video -%}
+    {{- element ? tag( 'video', {
+        id      : "video#{random()}",
+        controls: true,
+        preload : true,
+        class   : "aspect-video w-full",
+        html    : block('source')
+    } ) -}}
+{%- endblock -%}
+
+
+{%- block source -%}
+    {%- if element.url ?? null and element.mimeType ?? null -%}
+        <source src="{{element.url}}" type="{{element.mimeType}}" />
+    {%- endif %}
+{%- endblock -%}
+
+
+{%- macro media( element = null ) -%}
+    {%- set params = {
+        element: element
+    } | merge( varargs, true ) -%}
+
+    {%- set path = ["_base/media", "_theme/media", "_burton/media"] -%}
+    {{- element ? include( path, params, withContext: false ) -}}
+{%- endmacro -%}

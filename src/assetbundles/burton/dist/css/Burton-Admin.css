@@ -1,0 +1,19 @@
+/**
+ * Burton - Extra CSS for Craft Control Panel Screens
+ */
+
+div.markdown hr + h1 {
+    margin-top: 3.5rem;
+}
+
+div.markdown h2 + p {
+    margin-top: 1.0rem;
+}
+
+#fields-headerBuilder,
+#fields-bodyBuilder,
+#fields-sidebarBuilder,
+#fields-details,
+#fields-card {
+    margin-block-end: 2.5rem !important;
+}

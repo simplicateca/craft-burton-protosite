@@ -1,0 +1,99 @@
+{## [Core] Text Layer, Typography, Style Adjustments8is
+{-------------------------------------------------------------------------------------##}
+{%- macro text( string = '' ) -%}
+    {%- set string = string ?? null and string is not iterable ? string|trim : null -%}
+    {{- string ? raw(string) -}}
+{%- endmacro %}
+
+
+{%- macro text__h1( string = '' ) -%}
+    {%- set html = string | retconOnly('h1')
+        ? string
+        : tag( 'h1', { html: string | retconChange(['p','h2','h3','h4','div'], false ), ...string|parseAttr } )
+    -%}
+
+    {%- set isCenter = "center" == html|parseAttr.style['text-align'] ?? null
+                    or "text-center" in html|parseAttr.class ?? [] -%}
+
+    {%- set class  = ["max-w-5xl @container", isCenter ? "mx-auto"] -%}
+
+    {{- tag( 'div', {
+        class: class,
+        html: html
+            | retconAttr( ['*[style*="text-align: center"]', '*[style*="text-align:center"]'], { class: 'text-center' } )
+            | retconAttr( 'p', { class: ["larger", "subtitle" ] }, false )
+            | retconAttr( '*', { style: false } )
+    } ) -}}
+{%- endmacro -%}
+
+
+{## [Zone Content] Block Intro
+{-------------------------------------------------------------------------------------##}
+{% block header -%}
+    {%- import "_burton" as b -%}
+    {{- b.text( TextBase( block.intro ?? block.introHeader ?? "" ).body,
+        "blockH1" ) -}}
+{% endblock %}
+
+
+{%- macro text__blockH1( string = '' ) -%}
+    {%- if string | retconOnly('h1') -%}
+        {{- _self.text__h1( string ) -}}
+    {%- else -%}
+        {{- string
+            | retconAttr( ['*[style*="text-align: center"]', '*[style*="text-align:center"]'], { class: 'text-center' } )
+            | retconAttr( 'p', { class: ["larger"] }, false )
+            | retconAttr( '*', { style: false } )
+        -}}
+    {%- endif -%}
+{%- endmacro -%}
+
+
+{%- macro text__blockFooter( string = '' ) -%}
+    {%- set html = string | retconOnly('h1')
+        ? string
+        : tag( 'h1', { html: string | retconChange(['p','h2','h3','h4','div'], false ) })
+    -%}
+    {%- set attr = html | parseAttr -%}
+
+    {{- tag( 'div', {
+        class: attr.style['text-align'] ?? null == 'center'
+            ? ["max-w-5xl mx-auto text-center py-16 @container"]
+            : ["max-w-5xl py-16 @container"],
+        html: html
+            | retconAttr( '*[style*="text-align:center"]', { class: 'text-center', style : false } )
+            | retconAttr( 'p', { class: 'larger' }, false )
+            | retconAttr( '*', { style: false } )
+    } ) -}}
+{%- endmacro -%}
+
+
+{%- macro text__larger( string = '' ) -%}
+    {%- set string = _self.default(string, ...varargs) -%}
+    {{ string | attr({ class: 'larger' }) }}
+{%- endmacro %}
+
+
+{%- macro text__smaller( string = '' ) -%}
+    {%- set string = _self.default(string, ...varargs) -%}
+    {{ string | attr({ class: 'smaller' }) }}
+{%- endmacro %}
+
+
+{%- macro text__twocols( string = '' ) -%}
+    {%- set string = _self.default(string, ...varargs) -%}
+    {{ string | attr({ class: 'columns-2 gap-8' }) }}
+{%- endmacro %}
+
+
+{%- macro text__callout( string = '' ) -%}
+    {%- set string = _self.default(string, ...varargs) -%}
+
+    {%- set theme = varargs.theme ?? 'default' -%}
+    {%- set attrs = {
+        class: 'p-4 @xl:p-10 border-2 border-theme-tint2 rounded canvas',
+        data : { theme: "#{theme}--reverse" }
+    } -%}
+
+    {{- string ? string | attr( attrs ) -}}
+{%- endmacro %}

@@ -1,0 +1,55 @@
+{## _burton/container.twig
+{---------------------------------------------------------------------------##}
+{%- extends "_burton/partial" -%}
+
+
+{##---------------------------------------------------------------------------}
+{§§ 1.0 ➜ Partial Templates ------------------------------------------------##}
+
+{## [Partial] Base Template
+{---------------------------------------------------------------------------##}
+{%- block output _self.tagOrRaw( content ?? null, tag ?? null, attr ?? {} ) -%}
+
+
+
+{## --------------------------------------------------------------------------}
+{§§ 2.0 ➜ Layout Partials --------------------------------------------------##}
+
+{## Container
+{---------------------------------------------------------------------------##}
+{%- macro container( content = null, container = null ) -%}
+    {%- set prefix = "container" -%}
+    {%- set container = container is string ? container : 'none' -%}
+    {%- set path = varargs.template ?? _self -%}
+    {%- set defs = ( block( "defs", path ) | jsonc_decode ) -%}
+
+    {%- set params = { content: content, attr: { data: { container: container } } } -%}
+    {%- set params = params | merge( defs["#{prefix}_#{container}"] ?? defs[prefix] ?? {}, true) -%}
+    {%- set params = params | merge( varargs, true ) -%}
+    {{- content ? include( path, params, withContext = false ) -}}
+{%- endmacro -%}
+
+
+
+{## --------------------------------------------------------------------------}
+{§§ 4.0 ➜ Layout Config ----------------------------------------------------##}
+
+{## [Config] Layout Partials (JSONC)
+{---------------------------------------------------------------------------##}
+{%- block defs -%}
+{
+    "container" : {
+        "tag": "div",
+        "attr": { "style": "max-width:1200px; padding: 0 1rem; margin: 0 auto;" }
+    },
+
+    "container_relative" : {
+        "tag": "div",
+        "attr": { "style": "position: relative;" }
+    },
+
+    "container_none" : {
+        "tag": ""
+    }
+}
+{%- endblock -%}

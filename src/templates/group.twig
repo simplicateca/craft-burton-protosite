@@ -1,0 +1,47 @@
+{## burton/group.twig
+{---------------------------------------------------------------------------##}
+{%- extends "_burton/partial" -%}
+
+
+{##---------------------------------------------------------------------------}
+{§§ 1.0 ➜ Partial Templates ------------------------------------------------##}
+
+
+{## [Partial] Base Template
+{---------------------------------------------------------------------------##}
+{%- block output -%}
+    {%- set output = parent() -%}
+    {%- block theme output -%}
+{%- endblock -%}
+
+
+{## [Formatter] Theme Layout
+{---------------------------------------------------------------------------##}
+{%- macro theme( content = null, theme = null, loop = null ) -%}
+    {%- set prefix = "theme" -%}
+    {%- set theme = theme is string ? theme : 'base' -%}
+    {%- set loop = loop is mapping ? loop : null -%}
+    {%- set path = varargs.template ?? _self -%}
+    {%- set defs = ( block( "defs", path ) | jsonc_decode ) -%}
+
+    {%- set params = { content: content, theme: theme, loop: loop, attr: { data: { theme: theme } } } -%}
+    {%- set params = params | merge( defs["#{prefix}_#{theme}"] ?? defs[prefix] ?? {}, true) -%}
+    {%- set params = params | merge( varargs, true ) -%}
+
+    {{- content is not empty ? include( path, params, withContext = false ) -}}
+{%- endmacro -%}
+
+
+{## --------------------------------------------------------------------------}
+{§§ 4.0 ➜ Layout Config ----------------------------------------------------##}
+
+{## [Config] Layout Partials (JSONC)
+{---------------------------------------------------------------------------##}
+{%- block defs -%}
+{
+    "theme" : {
+        "tag": "section",
+        "attr": { "class": ["w-full relative py-12 lg:py-20 @container"] }
+    }
+}
+{%- endblock -%}

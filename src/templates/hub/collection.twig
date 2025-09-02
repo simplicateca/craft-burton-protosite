@@ -1,0 +1,56 @@
+{%- extends "_base/_template" -%}
+
+{%- if not currentUser.admin ?? null -%}
+    {%- redirect '/' -%}
+{%- endif -%}
+
+{%- block main -%}
+    {%- import "_burton" as b -%}
+    {{- b.container( tag( 'main', {
+        html: block('content'),
+    }), 'fluid' ) -}}
+{%- endblock -%}
+
+{%- block content -%}
+
+    {%- set collection = craft.entries().section('collections').slug(slug ?? '---').one() -%}
+    {%- set type = collection.type.handle ?? null -%}
+
+    {# {%- set query = ( source.query.settings ?? {} ) | merge( {
+        limit  : limit,
+        orderBy: orderBy,
+    } | filter, true ) -%} #}
+
+    {%- if type == 'collectionQuery' -%}
+
+        {%- set settings = collection.query.settings ?? {} -%}
+
+        {%- set query = {
+            section: settings.section ?? null,
+            type:    settings.type    ?? null,
+            before:  settings.before  ?? null,
+            after:   settings.after   ?? null,
+            related: settings.related ?? null,
+            sort:    settings.sort    ?? null,
+            order:   settings.order   ?? null,
+            with:    settings.with    ?? [],
+            limit:   settings.limit   ?? -1,
+            element: settings.element ?? 'craft\\elements\\Entry',
+        } | filter -%}
+
+        {%- set entries = collectionQuery( query ) -%}
+    {%- endif -%}
+
+    <h1>{{ collection.title }}</h1>
+    <p>{{ collection.summary ?? null }}</p>
+
+    {%- if entries is not empty -%}
+        {%- import "_burton" as b -%}
+        {{- b.layout( entries, ...{
+            layout: 'grid',
+            card: 'summary',
+            grid: 'auto'
+        } ) -}}
+    {%- endif -%}
+
+{%- endblock -%}

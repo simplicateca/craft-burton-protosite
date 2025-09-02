@@ -1,0 +1,208 @@
+{## [Core] Collapser Component
+{---------------------------------------------------------------------------------------}
+  ✔ Built using Alpine JS & Tailwind
+  ✔ Accessibility (a11y) compliant
+  ✔ Easy to extend and customize
+{-------------------------------------------------------------------------------------##}
+{% extends "_burton/partial" -%}
+
+
+{%- macro collapser( items = [] ) -%}
+    {%- set path = varargs.template ?? _self -%}
+
+    {%- if items[0] ?? null is object and 'craft\\elements\\Entry' == className( items[0] ) -%}
+        {%- import "_burton" as b -%}
+        {%- set items = items|map(x => b.card(x, ...varargs)) -%}
+    {%- endif -%}
+
+    {%- set params = {
+        items: items,
+    } | merge( varargs, true ) -%}
+
+    {{- include( path, params ) -}}
+{%- endmacro -%}
+
+{# {%- macro card__collapser() -%}
+    {% block card__imagelayer "icon" -%}
+    {% block card__class "w-full relative flex flex-row-reverse gap-10 pr-8" -%}
+    {% block card__words -%}
+        <div class="flex flex-col gap-3">
+            <div class="-mr-8 pr-8 flex flex-col h-full">
+                <div class="flex-grow max-h-[50vh] overflow-y-auto">
+                    {{- ( content.text ??? content.summary ) | raw -}}
+                </div>
+            </div>
+
+            {{- block('action') -}}
+        </div>
+    {%- endblock %}
+{%- endmacro -%} #}
+
+{## Usage
+{---------------------------------------------------------------------------------------}
+
+    The easiest way to use the collapser component is to call the template via
+    {% embed %}, passing in the items you want to display in the panels.
+
+    You will then need to override the `panel__title` and `panel__content` blocks
+    within your {% embed %} tag to define the contents of each panel.
+
+    The following example shows the most common way to use the collapser to output
+    card content for a list of items.
+
+    {%- import "_burton" as b -%}
+    {% set panels = map( x => {
+        title  : CardBase( item )['label'],
+        content: b.card( item, 'panel', ...settings )}
+    }, items ) %}
+
+    {% embed ['_base/collapser', '_theme/collapser', '_burton/collapser'] with {
+        items     : panels,
+        firstopen : true,
+    } %}
+        {% block panel__title   item.title %}
+        {% block panel__content item.content %}
+    {% endembed %}
+
+
+{## Configuration
+{---------------------------------------------------------------------------------------}
+
+    Only two named parameters are recognized by the component:
+
+      `items`       array (required)
+                    items to loop through within the collapser
+
+      `firstopen`   boolean (optional)
+                    determines if the first item should start open
+
+    Additional parameters may be passed into the template (per the example above),
+    but only the above two are used by the component.
+
+    Additional changes can be made to the component by overriding some of the block
+    definitions listed below that are responsible for styling various parts of the
+    collapser.
+{-------------------------------------------------------------------------------------##}
+{% block collapser__class   "w-full max-w-5xl space-y-4" -%}
+
+{% block panel__titleclass  "h4 mb-0 text-left" -%}
+{% block panel__titletag    "div" -%}
+{% block panel__buttonclass "flex p-6 pb-0 w-full h-full items-center justify-between" -%}
+
+{% block panel__openclass   "shadow bg-theme-tint2 transition" -%}
+{% block panel__textclass   "p-6" -%}
+
+{% block icon__close svg( '@svgroot/minus.svg') | attr({
+    class: 'fill-current h-10 w-10'
+}) -%}
+
+{% block icon__open svg( '@svgroot/plus.svg') | attr({
+    class: 'fill-current h-10 w-10'
+}) -%}
+{##-----------------------------------------------------------------------------------##}
+
+
+{% block output %}{% if items ?? null is iterable and items is not empty -%}
+
+    {%- set uuid  = uuid  ?? "collapser#{random()}" -%}
+    {%- set title = title ?? 'Collapsing Panels' -%}
+    {%- set count = items | length -%}
+    {%- set active = ( firstopen ?? false ) ? 1 : 0 -%}
+
+    <div
+        class="{{ block('collapser__class') }}"
+        x-data="{
+            active: '{{active}}',
+
+            toggle(index) {
+                let el = document.getElementById(`panel__${index}`)
+                if( el ) {
+                    let panel = Alpine.$data(el)
+                    if( this.isopen(index) ) {
+                        panel.opening = false
+                        this.active = ''
+                    } else {
+                        this.active = index
+                        panel.opening = true
+                        setTimeout(() => { panel.opening = false; }, 100 );
+                    }
+                }
+            },
+
+            isopen(index) {
+                return ( this.active === index );
+            },
+
+            handleleave(index) {
+                let el = document.getElementById(`panel__${index}`)
+                let header = document.getElementById(`header__${index}`)
+                if( el && header ) {
+                    let panel = Alpine.$data(el)
+                    if( panel.opening ) {
+                        panel.opening = false
+                        setTimeout(() => {
+                            header.scrollIntoView({ behavior: 'smooth' })
+                        }, 100 );
+                    }
+                }
+            }
+        }"
+
+    >{% for item in items %}{{ block( 'panel' ) }}{% endfor %}</div>
+{%- endif -%}{%- endblock %}
+
+
+{## Component Parts
+{-------------------------------------------------------------------------------------##}
+{%- block panel__content -%}
+    {{- item | retconRemove( 'template' ) -}}
+{%- endblock -%}
+
+{%- block panel__title -%}
+    {%- set title = item | retconOnly( 'template[data-title]' ) | retconChange( 'template', false ) -%}
+    {{ title ?? null }}
+{%- endblock -%}
+
+{% block panel -%}
+    <div
+        x-cloak
+        id="panel__{{loop.index}}"
+        x-data="{
+            id: '{{loop.index}}',
+            opening: false
+        }"
+        :class="isopen(id) ? '{{ block( 'panel__openclass' ) }}' : ''"
+        role="region"
+    >
+        <div
+            id="header__{{loop.index}}"
+            x-intersect:leave="handleleave(id)"
+            class="h-full mb-0 -scroll-mt-4"
+        >{{
+            tag( 'button', {
+                html : block( 'button' ),
+                class: block( 'panel__buttonclass' ),
+                'x-on:click'   : "toggle(id)",
+                'aria-expanded': "isopen(id)",
+            } )
+        }}</div>
+
+        <div x-show="isopen(id)" x-collapse.duration.100ms>
+            <div class="{{ block( 'panel__textclass' ) }}">{{ block('panel__content') }}</div>
+        </div>
+    </div>
+{%- endblock %}
+
+{% block button -%}
+    {%- set titletag = titletag ?? null is iterable ? titletag : {} %}
+    {%- set titletag = titletag is string ? { html: titletag } : titletag %}
+    {%- set titletag = {
+        class : settings.panel__titleclass ?? block('panel__titleclass') ?? "",
+        html  : block('panel__title')
+    } | merge( titletag ) -%}
+
+    {{ tag( block('panel__titletag'), titletag ) }}
+
+    <span x-show="isopen(id)"  aria-hidden="true" class="ml-4">{{ block( 'icon__close' ) }}</span>
+    <span x-show="!isopen(id)" aria-hidden="true" class="ml-4">{{ block( 'icon__open'  ) }}</span>
+{%- endblock %}

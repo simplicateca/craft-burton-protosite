@@ -1,0 +1,145 @@
+{%- block output -%}
+    {%- set tag = tag ?? 'div' -%}
+    {%- set content = content ?? null -%}
+    {%- set content = ( content is iterable ? content|join('') : content ) | trim -%}
+
+    {%- if content -%}
+        {{- tag is empty
+            ? content
+            : tag( tag, { html: content } | merge( attr ?? {}, true ) ) -}}
+    {%- endif -%}
+{%- endblock -%}
+
+
+{## --------------------------------------------------------------------------}
+{§§ 3.0 ➜ Utility Functions ------------------------------------------------##}
+
+{%- macro trigger() -%}
+    {%- set button = {
+        class: ["flex bg-none p-0 m-0 text-theme-highlight hover:text-theme-link-tint focus:text-theme-accent"],
+        label: "Open Menu"|t,
+        dispatch: null,
+        svg: { path: null, class: ["h-8 w-8 block fill-current"] }
+    } | merge(varargs, true) -%}
+
+    <button
+        type="button"
+        class="{{ button.class | join('') }}"
+        x-data="{}"
+        x-on:click="$dispatch('{{ button.dispatch }}')"
+        aria-label="{{ button.label }}"
+        title="{{ button.label }}">
+        {{- button.svg.path ? svg( button.svg.path ) | attr({ class: button.svg.class }) : button.label -}}
+    </button>
+{%- endmacro -%}
+
+
+{## [Layouts] Base Layout
+{-------------------------------------------------------------------------------------##}
+{%- macro layout( items = [] ) -%}
+    {%- set limit = (varargs.limit ?? null) > 0
+        ? varargs.limit
+        : 1000 -%}
+    {%- set items = items[0] ?? null ? items : [items] -%}
+    {%- set items = items | filter [0:limit] -%}
+
+    {{ _self.tagOrRaw( _self.unpack( items ), varargs.tag ?? null, varargs.attr ?? {} ) }}
+{%- endmacro -%}
+
+
+{## [Utility] Unpack Content
+{---------------------------------------------------------------------------##}
+{%- macro unpack( content = null ) -%}
+    {%- if content is mapping -%}
+        {{ content.html ?? null }}
+    {%- elseif content is iterable -%}
+        {% for item in content %}
+            {{- item.html ??? ( item is iterable ) ? null : item -}}
+        {% endfor %}
+    {%- else -%}
+        {{ content }}
+    {%- endif -%}
+{%- endmacro -%}
+
+{%- macro flatten( content = null ) -%}
+    {%- set content = content ?? null -%}
+    {%- set content = ( content is iterable ? content|values|join('') : content ) | trim -%}
+{%- endmacro -%}
+
+{%- macro tagOrRaw( content = "", tag = 'div', attr = {} ) -%}
+    {%- set tag  = tag ?? null is string ? tag : 'div' -%}
+    {%- set attr = ( attr ?? null is mapping ? attr : {} )
+        | merge({ html: content }, true) -%}
+    {{- tag ? tag( tag, attr ) : raw( content ) -}}
+{%- endmacro -%}
+
+
+{## [Utility] Merge JSON Definitions
+{---------------------------------------------------------------------------##}
+{%- macro merge_json( one, two ) -%}
+    {{- one | jsonc_decode | merge( two | jsonc_decode, true ) | json_encode | raw -}}
+{%- endmacro -%}
+
+{%- macro unpackNestedOptions(groups = [], type = null) -%}
+    {%- set groups = groups ?? [] -%}
+    {%- set type   = type ??? null -%}
+
+    {%- if type is empty -%}
+        {%- set rawLabels = {} -%}
+        {%- for groupName, subgroup in groups -%}
+            {%- for key, group in subgroup -%}
+                {%- if group.label ?? null -%}
+                    {%- set existing = rawLabels[key] ?? [] -%}
+                    {%- set rawLabels = rawLabels | merge({ (key): existing | merge([group.label]) }) -%}
+                {%- endif -%}
+            {%- endfor -%}
+        {%- endfor -%}
+
+        {%- set result = [] -%}
+        {%- for key, labels in rawLabels -%}
+            {%- set cleanedLabels = labels
+                | map( label => label
+                    | replace({'Choose ': '', 'Create ': ''}) )
+                | unique -%}
+            {%- set joinedLabels = cleanedLabels | join(', ') -%}
+            {%- set displayLabel = (joinedLabels != key|capitalize) ? key|capitalize ~ ' (' ~ joinedLabels ~ ')' : key|capitalize -%}
+            {%- set result = result | merge([{ 'value': key, 'label': displayLabel }]) -%}
+        {%- endfor -%}
+        {{- result | json_encode | raw  -}}
+    {%- else -%}
+        {%- set result = collect(groups[type] ?? []).map( (k,v) => {
+            value: v,
+            label: k.label ?? v,
+            settings: k.settings ?? {},
+            constants: k.constants ?? {}
+        }).values().all() -%}
+        {{- result | json_encode | raw -}}
+    {%- endif -%}
+{%- endmacro -%}
+
+
+{## Dynamic URI Generation Routing
+{---------------------------------------------------------------------------------------}
+    IMPORTANT: Resave existing records (via console) anytime this macro changes.
+{---------------------------------------------------------------------------------------}
+  ➜ make craft "resave/entries --section=articles"
+  ➜ make craft "resave/entries"
+{-------------------------------------------------------------------------------------##}
+{%- macro uri_format( object ) -%}{%- apply spaceless -%}
+    {%- set type = object.type.handle | default('') | pluralize | slugify -%}
+    {%- set slug = object.slug|default(null) -%}
+    {{- [type, slug ] | filter | join('/') -}}
+{%- endapply -%}{%- endmacro -%}
+
+
+
+{## Handle Redirects
+{-------------------------------------------------------------------------------------##}
+{%- macro redirect( entry ) -%}
+    {%- set url = entry.website ??? entry.entries.one().url ??? null -%}
+    {%- if url -%}
+        {%- redirect url -%}
+    {%- else -%}
+        {%- header "HTTP/1.0 404 Not Found" -%}
+    {%- endif -%}
+{%- endmacro -%}

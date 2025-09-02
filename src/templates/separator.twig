@@ -1,0 +1,57 @@
+{## _burton/separator.twig
+{---------------------------------------------------------------------------##}
+{%- extends "_burton/partial" -%}
+
+
+{##---------------------------------------------------------------------------}
+{§§ 1.0 ➜ Partial Templates ------------------------------------------------##}
+
+{## [Partial] Base Template
+{---------------------------------------------------------------------------##}
+{%- block output _self.tagOrRaw( content ?? null, tag ?? null, attr ?? {} ) -%}
+
+
+
+{## [Partial] Separator
+{---------------------------------------------------------------------------##}
+{%- macro separator( content = null, separator = null ) -%}
+    {%- set prefix = "separator" -%}
+    {%- set choice = separator is string ? separator : 'none' -%}
+    {%- set tmpl = varargs.template ?? _self -%}
+    {%- set defs = ( block( "defs", tmpl ) | jsonc_decode ) -%}
+
+    {%- set params = ( defs["#{prefix}_#{choice}"] ?? defs[prefix] ?? {} ) -%}
+    {%- set params = params | merge( varargs, true ) -%}
+
+    {{- include( tmpl, { content: "", ...params }, withContext = false ) -}}
+{%- endmacro -%}
+
+
+
+{## --------------------------------------------------------------------------}
+{§§ 4.0 ➜ Layout Config ----------------------------------------------------##}
+
+{## [Config] Layout Partials (JSONC)
+{---------------------------------------------------------------------------##}
+{%- block defs -%}
+{
+    "separator": {
+        "tag": "div",
+        "attr": { "style": "height: 4rem;", "html": "<!-- Separator -->" }
+    },
+
+    "separator_none": {
+        "tag": ""
+    },
+
+    "separator_large": {
+        "tag": "div",
+        "attr": { "style": "height: 8rem;", "html": "<!-- Separator -->" }
+    },
+
+    "separator_small": {
+        "tag": "div",
+        "attr": { "style": "height: 2rem;", "html": "<!-- Separator -->" }
+    }
+}
+{%- endblock -%}

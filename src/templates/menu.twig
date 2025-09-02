@@ -1,0 +1,213 @@
+{## burton/menu
+{-------------------------------------------------------------------------------------##}
+{%- extends "_burton/partial" -%}
+
+{%- block output -%}
+    {{- nav.tag is defined
+        ? tag( nav.tag, { html: block('list'), ...nav.attr ?? {} } )
+        : block('list') -}}
+{%- endblock -%}
+
+
+{%- block list -%}
+    {{- list.tag is defined
+        ? tag( list.tag, { html: block('nodes'), ...list.attr ?? {} } )
+        : block('nodes') -}}
+{%- endblock -%}
+
+
+{%- block nodes -%}
+    {%- set nodes = nodes ?? [] -%}
+    {%- for node in nodes -%}
+        {%- block node -%}
+            {%- if [node, 'title'] is callable -%}
+                {%- set isPassive = [node, 'isPassive'] is callable ? node.isPassive : 'false' -%}
+                {{- [node, 'isPassive'] is callable and node.isPassive
+                    ? tag( passive.node.tag ?? list.node.tag ?? 'div', { html: block('passive'), ...(list.node.attr ?? {}) | merge(passive.node.attr ?? {}, true) } )
+                    : tag( link.node.tag    ?? list.node.tag ?? 'div', { html: block('link'),    ...(list.node.attr ?? {}) | merge(link.node.attr    ?? {}, true) } )
+                -}}
+            {%- else -%}
+                {{- tag( link.node.tag ?? list.node.tag ?? 'div', { html: node.html ?? node, ...(list.node.attr ?? {}) | merge(link.node.attr ?? {}, true) } ) -}}
+            {%- endif -%}
+        {%- endblock -%}
+    {%- endfor -%}
+{%- endblock -%}
+
+
+{%- block link -%}
+    {%- set node = node ?? null -%}
+    {%- set params = {
+        class: [node.classes ?? '']
+    } | merge( link.attr ?? {}, true ) -%}
+
+{#  data : { parent: node.hasDescendants ? true : null },
+    node.active ? "is-active" : null #}
+
+    {{- tag( link.tag ?? 'a', {
+        html: tag( link.label.tag ?? list.node.label.tag ?? 'span', { html: node.title ??? '', ...link.label.attr ?? {} } ),
+        href: node.url,
+        ...params
+    }) -}}
+{%- endblock -%}
+
+
+{%- block passive -%}
+    {%- set node = node ?? null -%}
+
+    {{- tag( passive.tag ?? 'div', {
+        html: tag( passive.label.tag ?? list.node.tag ?? 'h4', { html: node.title ??? '', ...passive.label.attr ?? {} } ),
+        href: node.url,
+        ...passive.attr ?? list.node.attr ?? {}
+    }) -}}
+{%- endblock -%}
+
+
+{%- macro renderMenu( nodes ) -%}
+    {%- set handle = nodes is string ? nodes : null -%}
+    {%- set nodes = handle
+        ? craft.navigation.nodes().handle(handle).level(varargs.level ?? 1).all() ?? []
+        : nodes -%}
+
+    {%- set navobj = craft.navigation.getNavByHandle(handle ?? 'none') -%}
+
+    {%- set prefix = "menu" -%}
+    {%- set choice = [varargs.menu ?? null, varargs.format ?? null] | filter | join('_') -%}
+    {%- set tmpl = varargs.template ?? _self -%}
+    {%- set defs = ( block( "defs", tmpl ) | jsonc_decode ) -%}
+
+    {%- set params = { nav: {
+        attr: {
+            id: "menu_#{choice}",
+            aria : {
+                label: navobj.name ?? "#{varargs.menu ?? ''|title} Navigation"
+            }
+        }
+    } } -%}
+
+    {%- set params = params | merge( defs[prefix] ?? {}, true ) -%}
+    {%- set params = params | merge( defs["#{prefix}_#{varargs.format ?? null}"] ?? {}, true ) -%}
+    {%- set params = params | merge( defs["#{prefix}_#{varargs.menu   ?? null}"] ?? {}, true ) -%}
+    {%- set params = params | merge( defs["#{prefix}_#{choice}"] ?? {}, true ) -%}
+    {%- set params = params | merge( varargs, true ) -%}
+
+    {{- nodes ? include( tmpl, { nodes: nodes, ...params }, withContext = false ) -}}
+
+{%- endmacro -%}
+
+
+
+{## --------------------------------------------------------------------------}
+{§§ 4.0 ➜ Menu Config ------------------------------------------------------##}
+
+{## [Config] Menu Layout Definitions (JSONC)
+{---------------------------------------------------------------------------##}
+{%- block defs -%}
+{
+    "menu": {
+        "nav": {
+            "tag": "nav",
+            "attr": {
+                "role": "navigation",
+                "class": ["m-0 p-0"]
+            }
+        },
+
+        "list": {
+            "tag": "ul",
+            "attr": {
+                "class": []
+            },
+            "node": {
+                "tag": "li",
+                "label": {
+                    "tag": "span"
+                }
+            }
+        },
+
+        "passive": {
+            "tag": "div",
+            "attr": {
+                "class": ["p-4 border-b border-theme-accent text-3xl"]
+            },
+            "label": {
+                "tag": "strong"
+            }
+        },
+
+        "link": {
+            "tag": "a",
+            "attr": {
+                "class": ["text-theme-link underline-offset-2 hover:underline hover:text-theme-link-tint"]
+            },
+
+            "active": {
+                "attr": { "class": ["is-active"] }
+            },
+
+            "button": {
+                "attr": { "class": ["button"] }
+            },
+
+            "node": {
+                "attr": {
+                    "class": ["flex flex-col items-center p-4"]
+                }
+            }
+        }
+    },
+
+    "menu_horizontal": {
+        "list": {
+            "attr": {
+                "class": ["m-0 p-0 list-none flex items-center gap-3 lg:gap-6"]
+            }
+        }
+    }
+}
+{%- endblock -%}
+
+
+{%- macro menu__breadcrumb( crumbs = null ) -%}
+    {%- set crumbs = crumbs is string
+        ? craft.navigation.breadcrumbs() ?? []
+        : crumbs ?? [] -%}
+
+    {%- if crumbs|length > 1 -%}
+        <nav class="flex py-2" aria-label="Breadcrumb">
+            <ol class="
+                inline-flex
+                items-center
+                space-x-1
+                md:space-x-2
+                text-theme-body
+                text-xs
+                sm:text-sm
+            ">
+                {% for crumb in crumbs %}
+                    {% if loop.first and crumb.segment == '' %}
+                        <li class="inline-flex items-center">
+                            <a href="{{ siteUrl('/') }}" class="inline-flex items-center gap-1 md:gap-2 text-theme-link hover:text-theme-link-tint">
+                                <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+                                <span>Home</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        {%- set title     = crumb.title ??? null %}
+                        {%- set url       = crumb.url ??? null %}
+                        {%- set visible   = true %}
+
+                        {% if visible %}
+                            <li class="hidden {{loop.index > 2 ? 'sm:block' : 'xs:block' }}">
+                                <div class="flex items-center gap-1 md:gap-2">
+                                    <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg>
+                                    <a href="{{url}}" class="hover:text-theme-link-tint font-medium truncate max-w-xs">{{ title }}</a>
+                                </div>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </ol>
+        </nav>
+    {%- endif -%}
+{%- endmacro -%}

@@ -1,0 +1,331 @@
+{## _burton/zones.twig
+{---------------------------------------------------------------------------##}
+{%- extends "_burton/partial" -%}
+
+
+{##---------------------------------------------------------------------------}
+{§§ 1.0 ➜ Zone Layout Base Template ----------------------------------------##}
+
+{%- block output -%}
+    {%- set content = content ?? null -%}
+    {%- set content = content is mapping
+        ? ( content.html ??? content )
+        : ( content[0] ?? null ? content|join('') : content ) -%}
+
+    {%- block header -%}
+        {%- set header = {
+            tag   : 'div',
+            align : 'zone1',
+            format: null,
+            attr: {
+                html: ( content.header ?? null ) | trim,
+                class: ["w-full @container mb-16"]
+            }
+        } | merge( header ?? {}, true ) -%}
+
+        {%- if header.attr.html is empty and header.force ?? null -%}
+            {%- set header = header | merge({ attr: { html: '<!-- Header -->' } }, true) -%}
+        {%- endif -%}
+
+        {{- header.attr.html is not empty ? header.tag is empty
+            ? header.attr.html
+            : tag( header.tag, header.attr ) -}}
+    {%- endblock -%}
+
+    {%- block zones -%}
+        {%- set zones = {
+            tag: 'div',
+            attr: {
+                html: content is string
+                    ? content | trim
+                    : ( block('zone1') ~ block('zone2') ) | trim,
+                class: ["w-full flex flex-col zone-gap"]
+            }
+        } | merge( zones ?? {}, true ) -%}
+
+        {{- zones.attr.html is not empty ? zones.tag is empty
+            ? raw( zones.attr.html )
+            : tag( zones.tag, zones.attr ) -}}
+    {%- endblock -%}
+
+    {%- block footer -%}
+        {%- set footer = {
+            tag   : 'div',
+            align : 'zone1',
+            format: null,
+            attr: {
+                html: (content.footer ?? null) | trim,
+                class: ["w-full @container"]
+            }
+        } | merge( footer ?? {}, true ) -%}
+
+        {%- if footer.attr.html is empty and footer.force ?? null -%}
+            {%- set footer = footer | merge({ attr: { html: '<!-- Footer -->' } }, true) -%}
+        {%- endif -%}
+
+        {{- footer.attr.html is not empty ? footer.tag is empty
+            ? raw( footer.attr.html )
+            : tag( footer.tag, footer.attr ) -}}
+    {%- endblock -%}
+{%- endblock -%}
+
+
+{## [Partial] Microzone: Zone1
+{---------------------------------------------------------------------------##}
+{%- block zone1 -%}
+    {%- set zone1 = {
+        tag: 'div',
+        attr: {
+            html: (content.zone1 ?? null) | trim,
+            class: ["w-full @container/zone"]
+        }
+    } | merge( zone1 ?? {}, true ) -%}
+
+    {%- if zone1.attr.html is empty and zone1.force ?? null -%}
+        {%- set zone1 = zone1 | merge({ attr: { html: '<!-- Zone 1 -->' } }, true) -%}
+    {%- endif -%}
+
+    {{- zone1.attr.html is not empty ? zone1.tag is empty
+        ? zone1.attr.html
+        : tag( zone1.tag, zone1.attr ) -}}
+{%- endblock -%}
+
+
+{## [Partial] Microzone: Zone2
+{---------------------------------------------------------------------------##}
+{%- block zone2 -%}
+    {%- set zone2 = {
+        tag: 'div',
+        attr: {
+            html: (content.zone2 ?? null) | trim,
+            class: ["w-full @container/zone"],
+            data: {
+                knockout: knockout ?? null
+            }
+        }
+    } | merge( zone2 ?? {}, true ) -%}
+
+    {%- if zone2.attr.html is empty and zone2.force ?? null -%}
+        {%- set zone2 = zone2 | merge({ attr: { html: '<!-- Zone 2 -->' } }, true) -%}
+    {%- endif -%}
+
+    {{- zone2.attr.html is not empty ? zone2.tag is empty
+        ? zone2.attr.html
+        : tag( zone2.tag, zone2.attr ) -}}
+{%- endblock -%}
+
+
+{## [Formatter] Zone Layout
+{-------------------------------------------------------------------------------------##}
+{%- macro zonelayout( content = null ) -%}
+    {%- set params = {
+        zonelayout: 'zone',
+        template  : _self,
+    } | merge( varargs, true ) -%}
+
+    {%- set defs = ( block( "defs", params.template ) | jsonc_decode ) -%}
+    {%- for option in params.zonelayout is iterable ? params.zonelayout : [params.zonelayout] -%}
+        {%- set option = option is string ? option|replace({ "zone_" : "" }) -%}
+        {%- set match  = defs["zone_#{option}"] ?? defs[option] ?? null -%}
+        {%- set params = match ? match | merge(params, true) : params -%}
+    {%- endfor -%}
+
+    {{- include( params.template, { content: content, ...params }, withContext = false ) -}}
+{%- endmacro -%}
+
+
+
+{## --------------------------------------------------------------------------}
+{§§ 4.0 ➜ Layout Config ----------------------------------------------------##}
+
+{## [Config] Layout Partials (JSONC)
+{---------------------------------------------------------------------------##}
+{%- block defs -%}
+{
+    "zone": {
+        "header": { "attr": { "class": ["max-w-5xl", "mx-auto", "pb-10"] } },
+        "zones" : { "attr": { "class": ["w-full", "flex", "flex-col", "zone-gap"], "data-attach": "center" }, "scrub": true },
+        "zone1" : { "attr": { "class": ["max-w-5xl", "mx-auto"], "data-zone": 1 } },
+        "zone2" : { "attr": { "data-zone": 2 } },
+        "footer": { "attr": { "class": ["max-w-3xl", "mx-auto", "pt-10"] } }
+    },
+
+    // - Horizontal Alignment: Center
+    "zone_rows-66|100": {
+        "header": { "attr": { "class": ["max-w-5xl", "mx-auto", "pb-10"] } },
+        "zones" : { "attr": { "class": ["w-full", "flex", "flex-col", "zone-gap"], "data-attach": "center" }, "scrub": true },
+        "zone1" : { "attr": { "class": ["max-w-5xl", "mx-auto"], "data-zone": 1 } },
+        "zone2" : { "attr": { "data-zone": 2 } },
+        "footer": { "attr": { "class": ["max-w-3xl", "mx-auto", "pt-10"] } }
+    },
+
+    "zone_rows-66|66": {
+        "header": { "attr": { "class": ["max-w-5xl", "mx-auto", "pb-10"] } },
+        "zones" : { "attr": { "class": ["w-full", "flex", "flex-col", "zone-gap"], "data-attach": "center" }, "scrub": true },
+        "zone1" : { "attr": { "class": ["max-w-5xl", "mx-auto"], "data-zone": 1 } },
+        "zone2" : { "attr": { "class": ["max-w-5xl", "mx-auto"], "data-zone": 2 } },
+        "footer": { "attr": { "class": ["max-w-3xl", "mx-auto", "pt-10"] } }
+    },
+
+    // - Horizontal Alignment: Left
+    "zone_rows-66|100-left": {
+        "header": { "attr": { "class": ["max-w-5xl", "mr-auto", "pb-10"] } },
+        "zones" : { "attr": { "class": ["w-full", "flex", "flex-col", "zone-gap"], "data-attach": "center" }, "scrub": true  },
+        "zone1" : { "attr": { "class": ["max-w-5xl", "mr-auto"], "data-zone": 1 } },
+        "zone2" : { "attr": { "data-zone": 2 } },
+        "footer": { "attr": { "class": ["max-w-3xl", "mr-auto", "pt-10"] } }
+    },
+
+
+    // Left (Horizontal Two Zone Layout)
+    // - Zone 1 (Copy/Text) : Left
+    // - Vertical Alignment : Top
+    // - Column Distribution: Equal Width (50/50)
+    // - Responsive Collapse: Full Width (Top/Bottom)
+    "zone_cols-50|50-top": {
+        "zones":  { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row", "zone-gap"], "data-attach": "left" } },
+        "zone1":  { "attr": { "class": ["@3xl:w-1/2 @4xl:p-5"], "data-zone": 1 } },
+        "zone2":  { "attr": { "class": ["@3xl:w-1/2 @4xl:p-5"], "data-zone": 2 } },
+        "header": { "attr": {
+            "class": "w-full max-w-5xl @container pb-5 @4xl:p-5",
+            "data": {
+                "center"  : "mx-auto",
+                "left"    : "@3xl:w-1/2 mr-auto",
+                "right"   : "@3xl:w-1/2 ml-auto",
+                "justify" : "mx-auto"
+            }
+        } }
+    },
+
+    // - Vertical Alignment : Center
+    "zone_cols-50|50": {
+        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row", "items-stretch", "zone-gap"], "data-attach": "left" } },
+        "zone1": { "attr": { "class": ["@3xl:w-1/2 @4xl:p-5 self-center"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-1/2 @4xl:p-5"], "data-zone": 2 } },
+        "header": { "attr": {
+            "class": "w-full max-w-5xl @container pb-5 @4xl:p-5",
+            "data": {
+                "center"  : "mx-auto",
+                "left"    : "@3xl:w-1/2 mr-auto",
+                "right"   : "@3xl:w-1/2 ml-auto",
+                "justify" : "mx-auto"
+            }
+        } }
+    },
+
+    // Right (Horizontal Two Zone Layout)
+    // - Zone 1 (Copy/Text) : Right
+    // - Vertical Alignment : Top
+    // - Column Distribution: Equal Width (50/50)
+    // - Responsive Collapse: Full Width (Top/Bottom)
+    "zone_colsrev-50|50-top": {
+        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row-reverse", "zone-gap"], "data-attach": "right" } },
+        "zone1": { "attr": { "class": ["@3xl:w-1/2 @4xl:p-5"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-1/2 @4xl:p-5"], "data-zone": 2 } }
+    },
+
+    // - Vertical Alignment : Center
+    "zone_colsrev-50|50": {
+        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row-reverse", "items-stretch", "zone-gap"], "data-attach": "right" } },
+        "zone1": { "attr": { "class": ["@3xl:w-1/2 @4xl:p-5 self-center"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-1/2 @4xl:p-5"], "data-zone": 2 } }
+    },
+
+    // LeftWide (Horizontal Two Zone Layout)
+    // - Zone 1 (Copy/Text) : Left
+    // - Vertical Alignment : Top
+    // - Column Distribution: Zone 1 Wide (60/40)
+    // - Responsive Collapse: Full Width (Top/Bottom)
+    "zone_cols-66|33-top": {
+        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row", "zone-gap"], "data-attach": "left" } },
+        "zone1": { "attr": { "class": ["@3xl:w-3/5 @4xl:p-5"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-2/5 @4xl:p-5"], "data-zone": 2 } }
+    },
+
+    // - Vertical Alignment : Center
+    "zone_cols-66|33": {
+        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row", "items-stretch", "zone-gap"], "data-attach": "left" } },
+        "zone1": { "attr": { "class": ["@3xl:w-3/5 @4xl:p-5", "self-center"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-2/5 @4xl:p-5"], "data-zone": 2 } }
+    },
+
+    // LeftNarrow (Horizontal Two Zone Layout)
+    // - Zone 1 (Copy/Text) : Left
+    // - Vertical Alignment : Top
+    // - Column Distribution: Zone 1 Narrow (40/60)
+    // - Responsive Collapse: Full Width (Top/Bottom)
+    "zone_cols-33|66-top": {
+        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row", "zone-gap"], "data-attach": "left" } },
+        "zone1": { "attr": { "class": ["@3xl:w-2/5 @4xl:p-5"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-3/5 @4xl:p-5"], "data-zone": 2 } }
+    },
+
+    // - Vertical Alignment : Center
+    "zone_cols-33|66": {
+        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row", "items-stretch", "zone-gap"], "data-attach": "left" } },
+        "zone1": { "attr": { "class": ["@3xl:w-2/5 @4xl:p-5", "self-center"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-3/5 @4xl:p-5"], "data-zone": 2 } }
+    },
+
+    // RightWide (Horizontal Two Zone Layout)
+    // - Zone 1 (Copy/Text) : Right
+    // - Vertical Alignment : Top
+    // - Column Distribution: Zone 1 Wide (40/60)
+    // - Responsive Collapse: Full Width (Top/Bottom)
+    "zone_colsrev-33|66-top": {
+        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row-reverse", "zone-gap"], "data-attach": "right" } },
+        "zone1": { "attr": { "class": ["@3xl:w-3/5 @4xl:p-5"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-2/5 @4xl:p-5"], "data-zone": 2 } }
+    },
+
+    // - Vertical Alignment : Center
+    "zone_colsrev-33|66": {
+        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row-reverse", "items-stretch", "zone-gap"], "data-attach": "right" } },
+        "zone1": { "attr": { "class": ["@3xl:w-3/5 @4xl:p-5", "self-center"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-2/5 @4xl:p-5"], "data-zone": 2 } }
+    },
+
+    // RightNarrow (Horizontal Two Zone Layout)
+    // - Zone 1 (Copy/Text) : Right
+    // - Vertical Alignment : Top
+    // - Column Distribution: Zone 1 Narrow (60/40)
+    // - Responsive Collapse: Full Width (Top/Bottom)
+    "zone_colsrev-66|33-top": {
+        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row-reverse", "zone-gap"], "data-attach": "right" } },
+        "zone1": { "attr": { "class": ["@3xl:w-2/5 @4xl:p-5"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-3/5 @4xl:p-5"], "data-zone": 2 } }
+    },
+
+    // - Vertical Alignment : Center
+    "zone_colsrev-66|33": {
+        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row-reverse", "items-stretch", "zone-gap"], "data-attach": "right" } },
+        "zone1": { "attr": { "class": ["@3xl:w-2/5 @4xl:p-5", "self-center"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-3/5 @4xl:p-5"], "data-zone": 2 } }
+    },
+
+    // Overlap (Overlapping Two Zone Layout)
+    // - Zone 1 (Copy/Text) : Center
+    // - Vertical Alignment : Center
+    // - Column Distribution: Zone 1 Narrow (40%)
+    // - Responsive Collapse: No change
+    "zone_overlapZones": {
+        "zones": { "attr": { "class": ["w-full", "overflow-hidden"] }, "scrub": true },
+        "zone1": { "attr": { "class": ["max-w-5xl", "p-5", "@lg:p-10", "@3xl:p-20", "relative", "z-20", "mx-auto"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": "absolute inset-0 w-full h-full z-10" } }
+    },
+
+    // Aside Left
+    "zone_asideLeft": {
+        "zones": { "attr": { "class": ["w-full flex flex-col lg:flex-row-reverse gap-10 2xl:gap-28"] } },
+        "zone1": { "tag": "main",  "force": true, "attr": { "class": ["min-h-[55vh] grow w-full"], "id": "content" } },
+        "zone2": { "tag": "aside", "force": true, "attr": { "class": ["w-full lg:max-w-sm"] } }
+    },
+
+    // Aside Right
+    "zone_asideRight": {
+        "zones": { "attr": { "class": ["w-full flex flex-col lg:flex-row gap-10 2xl:gap-28"] } },
+        "zone1": { "tag": "main",  "force": true, "attr": { "class": ["min-h-[55vh] grow w-full"], "id": "content" } },
+        "zone2": { "tag": "aside", "force": true, "attr": { "class": ["w-full lg:max-w-sm"] } }
+    }
+}
+{%- endblock -%}

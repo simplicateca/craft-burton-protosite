@@ -1,0 +1,139 @@
+{%- extends "_burton/partial" -%}
+
+{## Builder Macro
+{## TODO: This should be it's own template: burton/builder
+{## ------------------------------------------------------------------------##}
+{%- macro builder( blocks = null, builder = null ) -%}
+    {%- set builder = builder ?? 'unknown' -%}
+
+    {%- set varargs = varargs | merge({
+        attr: { data: { builder: builder ?? 'unknown' } },
+    }, true ) -%}
+
+    {%- if blocks is instance of('Illuminate\\Support\\Collection') -%}
+        {%- set blocks = blocks.all() -%}
+    {%- endif -%}
+
+    {%- set entry = varargs.entry ?? blocks[0].primaryOwner ?? null -%}
+
+    {%- set blocks = BuilderBase( blocks, path: varargs.blockPath ?? [
+         "_base/block.%blocktype%",
+        "_theme/block.%blocktype%",
+         "_base/block",
+        "_theme/block",
+       "_burton/block"
+    ] ) -%}
+
+    {%- import "_burton" as b -%}
+    {%- set bLength = blocks|length -%}
+    {%- set bIndex  = 0 -%}
+    {%- set gPrev   = null -%}
+    {%- set bPrev   = null -%}
+    {%- for chunk in themeChunks(blocks, 'neutral') -%}
+
+        {%- set content -%}
+            {%- for blk in chunk -%}
+                {%- set bIndex = bIndex + 1 -%}
+                {%- set params = {
+                    _path: blk.path,
+                    block: blk.block,
+                    settings: blk.settings,
+                    loops: {
+                        theme: loop,
+                        block: {
+                            index    : bIndex,
+                            index0   : bIndex - 1,
+                            revindex : bLength - bIndex + 1,
+                            revindex0: bLength - bIndex,
+                            first    : (bIndex == 1),
+                            last     : (bIndex == bLength),
+                            length   : bLength,
+                            parent   : null,
+                            prevhtml : bPrev,
+                        },
+                    }
+                } -%}
+
+                {%- set bPrev = include(blk.path, params, withContext = false) -%}
+                {{- raw( bPrev ) -}}
+            {%- endfor -%}
+        {%- endset -%}
+
+        {%- set params = {
+            theme: chunk|first.settings.theme,
+            group: chunk,
+            loop : loop,
+            prevhtml: gPrev
+        } | merge( varargs, true ) -%}
+
+        {%- set gBefore = content | retconOnly('template#beforeGroup') -%}
+        {%- set gPrev   = b.theme( content, ...params ) | retconRemove('template#beforeGroup') -%}
+
+        {{- gBefore | retconChange( 'template#beforeGroup', false )|attr({
+            class: ["-mt-20 -mb-8"],
+        }) -}}
+
+        {{- gPrev | attr({ class: [ loop.last ? params.last.class ?? null ] } ) -}}
+    {%- endfor -%}
+{%- endmacro -%}
+
+
+{## Body Builder
+{## ------------------------------------------------------------------------##}
+{%- macro builder__body( blocks = null ) -%}
+    {%- set entry = varargs.entry ?? null -%}
+    {%- if blocks is instance of('craft\\elements\\Entry') -%}
+        {%- set entry = blocks -%}
+        {%- set blocks = collect( entry.bodyBuilder ?? [] ) -%}
+    {%- endif -%}
+
+    {%- set params = {
+        builder: 'body',
+        entry: entry,
+        last: {
+            class: "mb-12 lg:mb-20"
+        },
+    } | merge( varargs, true ) -%}
+
+    {{- blocks ? _self.builder( blocks, ...params ) -}}
+{%- endmacro -%}
+
+
+{## Header Builder
+{## ------------------------------------------------------------------------##}
+{%- macro builder__header( blocks = null ) -%}
+    {%- set entry = varargs.entry ?? null -%}
+    {%- if blocks is instance of('craft\\elements\\Entry') -%}
+        {%- set entry = blocks -%}
+        {%- set blocks = collect( entry.headerBuilder ?? [] ) -%}
+    {%- endif -%}
+
+    {%- set params = {
+        builder  : 'header',
+        spacer   : "small",
+        entry    : entry,
+    } | merge( varargs, true ) -%}
+
+    {{- blocks ? _self.builder( blocks, ...params ) -}}
+{%- endmacro -%}
+
+
+{## Sidebar Builder
+{## ------------------------------------------------------------------------##}
+{%- macro builder__sidebar( blocks = null ) -%}
+    {%- set entry = varargs.entry ??? null -%}
+    {%- if blocks is instance of('craft\\elements\\Entry') -%}
+        {%- set entry = blocks -%}
+        {%- set blocks = collect( varargs.blocks ??? blocks.sidebarBuilder ??? [] ).all() ?? [] -%}
+    {%- endif -%}
+
+    {%- if blocks -%}
+        {%- set params = {
+            builder  : 'sidebar',
+            container: 'none',
+            spacer   : "small",
+        } | merge( varargs, true ) -%}
+
+        {{- _self.builder( blocks, ...params ) -}}
+    {%- endif -%}
+{%- endmacro -%}

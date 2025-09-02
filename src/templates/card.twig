@@ -1,0 +1,194 @@
+{%- extends "_burton/partial" -%}
+
+
+{## Card Defaults
+{-------------------------------------------------------------------------------------##}
+{%- block output -%}
+    {%- if element is defined -%}
+        {%- set content = CardBase(element) -%}
+        {%- set html = [ block('figure'), block('details') ] | join('') -%}
+        {{- _self.tagOrRaw( html, tag ?? null, {
+            class: ["w-full relative @container"],
+        } | merge( attr ?? {}, true ) ) -}}
+    {%- endif -%}
+{%- endblock -%}
+
+
+{##-----------------------------------------------------------------------------------##}
+{%- block figure -%}
+    {%- block image -%}
+        {%- set image = content.images ??? images ??? image ??? null -%}
+        {%- set figure = { layer: 'default' } | merge(figure ?? {}, true) -%}
+        {%- import "_burton" as b -%}
+        {{- b.image( image, ...figure ) -}}
+    {%- endblock -%}
+{%- endblock -%}
+
+
+{%- block details -%}
+    {{- block('text') -}}
+    {{- block('action') -}}
+
+    {{- block('meta') -}}
+{%- endblock -%}
+
+
+{%- block meta -%}
+    {%- set title = ( title ?? content.label ?? content.title ?? content.headline ?? element.title ?? null ) | striptags -%}
+    {%- if title is not empty -%}
+        <template data-title="card"><span>{{title}}</span></template>
+    {%- endif -%}
+{%- endblock -%}
+
+
+{%- block text -%}
+    {%- set text = {
+        headline: {
+            tag: 'div',
+            attr: {
+                html: headline ?? content.headline ?? null,
+                class: ['h4']
+            }
+        },
+        summary:{
+            tag: 'p',
+            attr: {
+                html: ( summary ?? content.summary ?? null ) | retconChange( 'p', false ),
+            }
+        },
+    } | merge( text ?? {}, true ) -%}
+
+    {%- block headline -%}
+        {{- text.headline.attr.html ? text.headline.tag
+            ? tag( text.headline.tag, text.headline.attr )
+            : text.headline.attr.html -}}
+    {%- endblock -%}
+
+    {%- block summary -%}
+        {{- text.summary.attr.html ? text.summary.tag
+            ? tag( text.summary.tag, text.summary.attr )
+            : text.summary.attr.html -}}
+    {%- endblock -%}
+{%- endblock -%}
+
+
+{% block action -%}
+    {%- set action = click ?? 'auto' -%}
+    {%- set url = content.url ?? null -%}
+
+    {%- if action in ['auto', 'default'] and url is not empty -%}
+        {%- set action = 'link' -%}
+    {%- endif -%}
+
+    {%- if action == 'button' and url -%}
+        {{ tag( 'a', {
+            href: url,
+            class: 'button',
+            html: 'Read More →',
+        } ) }}
+    {%- endif -%}
+
+    {%- if action == 'link' and url -%}
+        {{ tag( 'a', {
+            href : url,
+            class: 'click-cover',
+            html : '<span class="hidden">Read More →</span>',
+        } ) }}
+    {%- endif -%}
+
+    {%- if action == 'modal' and url -%}
+        {{ tag( 'a', {
+            href: url,
+            class: 'click-cover',
+            html: '<span class="hidden">Read More →</span>',
+            hx: {
+                get: url,
+                ext: 'ajax-header',
+                target:'#modal__dynamic'
+            }
+        } ) }}
+    {%- endif -%}
+
+    {%- if action == 'tease' and url -%}
+        {%- import "_burton" as b -%}
+        {{- include( ["_base/modal", "_theme/modal", "_burton/modal"], {
+            content: b.card( element, 'modaltease' )
+        }, withContext = false ) -}}
+    {%- endif -%}
+{%- endblock -%}
+
+
+
+{## Card Rendering
+{-------------------------------------------------------------------------------------##}
+{%- macro card( element = null ) -%}
+    {%- set params = {
+        element: CardBase( element ),
+    } | merge( varargs, true ) -%}
+
+    {%- set path = ["_base/card", "_theme/card", "_burton/card"] -%}
+    {{- element ? include( path, params, withContext: false ) -}}
+{%- endmacro -%}
+
+
+{%- macro card__summary( element = null ) -%}
+    {%- if element -%}
+        {%- embed ["_base/card", "_theme/card", "_burton/card"] with {
+            element: CardBase( element ),
+            figure: { layer: 'widescreen' },
+        } | merge( varargs, true ) -%}
+            {%- block text -%}<div class="p-4">{{- parent() -}}</div>{%- endblock -%}
+            {%- block summary -%}
+                {{ parent() | attr({
+                    class: ["line-clamp-3"]
+                }) }}
+            {%- endblock -%}
+        {%- endembed -%}
+    {%- endif -%}
+{%- endmacro -%}
+
+
+{%- macro card__overlay( element = null ) -%}
+    {%- set params = {
+        figure: { layer: 'widescreen' },
+    } | merge( varargs, true ) -%}
+    {{ _self.card( element, ...params ) -}}
+{%- endmacro -%}
+
+
+{%- macro card__spotlight( element = null ) -%}
+    {%- if element -%}
+        {%- embed ["_base/card", "_theme/card", "_burton/card"] with {
+            element: CardBase( element ),
+            figure: { layer: 'widescreen' },
+        } | merge( varargs, true ) -%}
+            {%- block headline -%}{%- endblock -%}
+            {%- block summary -%}{%- endblock -%}
+        {%- endembed -%}
+    {%- endif -%}
+{%- endmacro -%}
+
+
+{%- macro card__panel( element = null ) -%}
+    {%- if element -%}
+        {%- embed ["_base/card", "_theme/card", "_burton/card"] with {
+            element: CardBase( element ),
+            figure: { layer: 'floatright' },
+            click : 'button',
+        } | merge( varargs, true ) -%}
+            {%- block headline -%}{%- endblock -%}
+        {%- endembed -%}
+    {%- endif -%}
+{%- endmacro -%}
+
+
+{%- macro card__modaltease( element = null ) -%}
+    {%- if element -%}
+        {%- embed ["_base/card", "_theme/card", "_burton/card"] with {
+            element: CardBase( element ),
+            figure: { layer: 'floatright' },
+            click : 'button',
+        } | merge( varargs, true ) -%}
+        {%- endembed -%}
+    {%- endif -%}
+{%- endmacro -%}

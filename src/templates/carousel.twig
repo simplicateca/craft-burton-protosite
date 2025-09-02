@@ -1,0 +1,119 @@
+{%- extends "_burton/partial" -%}
+
+{%- macro carousel( items = [] ) -%}
+    {%- set path = varargs.template ?? _self -%}
+
+    {%- if items[0] ?? null is object and 'craft\\elements\\Entry' == className( items[0] ) -%}
+        {%- import "_burton" as b -%}
+        {%- set items = items|map(x => b.card(x, ...varargs)) -%}
+    {%- endif -%}
+
+    {%- set params = {
+        items: items,
+    } | merge( varargs, true ) -%}
+
+    {{- include( path, params ) -}}
+{%- endmacro -%}
+
+
+{## Default Configuration
+{---------------------------------------------------------------------------------------}
+{-------------------------------------------------------------------------------------##}
+{% block class__base  "min-w-[260px] relative z-40 mb-6 lg:mb-0" -%}
+{% block class__track "" -%}
+{% block class__ul    "h-full" -%}
+{% block class__li    "flex flex-col items-center justify-start" -%}
+{% block class__slide block('class__li') -%}{## class__slide is an alias for class_li ##}
+{% block class__pagination "" -%}
+
+{% block splide__json %}
+    {%- if "max1" == columns ?? null -%}
+        {
+            type: 'fade'
+        }
+    {%- endif -%}
+    {%- if "max2" == columns ?? null -%}
+        {
+            type   : 'loop',
+            gap    : '20px',
+            perPage: 2
+        }
+    {%- endif -%}
+
+    {%- if "max3" == columns ?? null -%}
+        {
+            type   : 'loop',
+            gap    : '40px',
+            perPage: 3
+        }
+    {%- endif -%}
+{% endblock %}
+
+
+
+{## Render Carousel HTML
+{-------------------------------------------------------------------------------------##}
+{% block output %}{% if items ?? null is iterable and items is not empty -%}
+
+    {%- set uuid  = uuid  ?? "splide#{random()}" -%}
+    {%- set title = title ?? 'Carousel' -%}
+    {%- set count = items | length -%}
+
+    {## Load Splide JS from CDN ##}
+    {% html at head %}
+        <script src="https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/js/splide.min.js"></script>
+    {%- endhtml %}
+
+    {## Load Splide CSS from CDN ##}
+    {% css "https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" -%}
+    {% css %}
+        button.splide__arrow { background: rgb( var(--background-tint) ); }
+        .splide__arrow svg { fill: rgb( var(--body) ); }
+        .splide__arrow--prev { left : -1rem; }
+        .splide__arrow--next { right: -1rem; }
+        .splide__pagination__page { bottom: -4rem; background-color: rgb( var(--theme-accent) ) !important; }
+        .splide__pagination__page.is-active { background-color: rgb( var(--theme-headline) ); }
+    {% endcss %}
+
+    <div
+        class="w-full relative"
+        x-data="{ splide: null }"
+        x-cloak
+        x-init="$nextTick(() => {
+            splide = new Splide( document.querySelector('#{{uuid}}'), {{ block('splide__json') | trim }} )
+
+            splide.on( 'overflow', function() {
+                splide.options = {
+                    arrows    : ( {{ count }} > splide.options.perPage ),
+                    pagination: ( {{ count }} > splide.options.perPage ),
+                    drag      : ( {{ count }} > splide.options.perPage )
+                }
+            } )
+
+            splide.mount()
+        })">
+
+        <section
+            id="{{uuid}}"
+            class="splide {{ block('class__base') }}"
+            aria-label="{{title}}"
+        >
+            <div class="splide__track {{ block('class__track') }}">
+                <ul class="splide__list {{ block('class__ul') }}">
+                    {% for item in items %}
+                        <li class="splide__slide {{ block('class__li') }}">{% block slide item | retconRemove('template') %}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <footer class="relative">
+                <ul class="splide__pagination {{ block('class__pagination') }}"></ul>
+            </footer>
+
+            {## Modal <templates> ##}
+            {% for item in items %}
+                {{- item | retconOnly('template') -}}
+            {% endfor %}
+        </section>
+    </div>
+{%- endif %}{% endblock %}

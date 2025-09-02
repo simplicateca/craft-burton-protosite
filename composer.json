@@ -1,0 +1,41 @@
+{
+    "name": "simplicateca/craft-burton-plugin",
+    "description": "Burton is a Craft CMS 5+ Protosite",
+    "type": "craft-plugin",
+    "keywords": ["craft-cms", "theme", "custom-theme", "protosite", "atomic-design"],
+    "license": "MIT",
+    "authors": [{
+        "name": "Simplicate",
+        "homepage": "https://simplicate.ca"
+    }],
+    "support": {
+        "email" : "info@simplicate.ca"
+    },
+    "repositories": [{
+        "type": "vcs",
+        "url": "https://github.com/simplicateca/burton-theme-solo"
+    }],
+    "require": {
+        "craftcms/cms": "^5.4.8",
+        "craftcms/ckeditor": "^4.3.0",
+        "simplicateca/metasettings": "^5.2.0",
+        "simplicateca/burton-theme-solo": "dev-develop",
+        "topshelfcraft/environment-label": "^5.0.0",
+        "nystudio107/craft-emptycoalesce": "^5.0.0",
+        "behinddesign/craft-object-storage": "^1.1.0",
+        "embed/embed": "^4.4.12",
+        "verbb/formie": "^3.0.9",
+        "verbb/navigation": "^3.0.5",
+        "mmikkel/retcon": "^3.2.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "simplicateca\\burton\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "Burton Protosite",
+        "handle": "burton",
+        "class": "simplicateca\\burton\\Burton"
+    }
+}

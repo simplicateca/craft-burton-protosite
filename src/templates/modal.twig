@@ -1,0 +1,212 @@
+{## [Core] Modal Component
+{-------------------------------------------------------------------------------------##}
+{%- extends "_burton/partial" -%}
+
+
+{## Template Variables
+{-------------------------------------------------------------------------------------##}
+{%- set open        = open        ??? false %}
+{%- set uuid        = uuid        ??? "modal#{random()}" -%}
+{%- set theme       = theme       ??? 'light' %}
+{%- set content     = content     ??? null %}
+{%- set headline    = headline    ??? null %}
+{%- set triggertext = triggertext ??? 'Load Summary →' %}
+
+
+
+{## Default Configuration
+{-------------------------------------------------------------------------------------##}
+{% block outerclass    "fixed inset-0 z-100 overflow-y-auto flex items-center justify-center" -%}
+{% block modalclass    "relative w-full max-w-4xl overflow-y-auto rounded-xl max-h-[90vh] p-8 mx-10 shadow-lg @container" -%}
+{% block overlayclass  "absolute inset-0 bg-black/70" -%}
+{% block triggertext triggertext %}
+{% block uuid uuid %}
+
+
+
+{## Component Parts
+{-------------------------------------------------------------------------------------##}
+{%- macro button( uuid, text ) -%}
+    <button
+        x-data="{}"
+        x-cloak
+        x-on:click.prevent="$dispatch( 'openmodal', { uuid: '{{uuid}}' } )"
+        type="button"
+        class="button click-cover"
+        aria-label="{{ text | striptags }}"
+    >{{ text }}</button>
+{%- endmacro -%}
+
+{%- macro invisibletrigger( uuid, text ) -%}
+    <a
+        href="#"
+        x-data="{}"
+        x-cloak
+        x-on:click.prevent="$dispatch( 'openmodal', { uuid: '{{uuid}}' } )"
+        class="click-cover"
+        aria-label="{{ text | striptags }}"
+    ><span class="hidden">{{ text }}</span></a>
+{%- endmacro -%}
+
+
+{## Render HTML
+{---------------------------------------------------------------------------------------}
+
+{-------------------------------------------------------------------------------------##}
+{% block output %}
+
+    {%- block trigger -%}
+        {{- button ?? null
+            ? _self.button( uuid, button )
+            : _self.invisibletrigger( uuid, block('triggertext') ) -}}
+    {%- endblock -%}
+
+    <template x-teleport="body" x-on:click="open = false" id="{{uuid}}" data-modal>
+        <div
+            x-data="{
+                open: {{open ? 'true' : 'false'}},
+                id: '{{uuid}}',
+                width: 0,
+                setWidth() { this.width = window.innerWidth > 0 ? window.innerWidth : screen.width }
+            }"
+
+            x-on:openmodal.window="open = ( id == event.detail.uuid ) ? true : false"
+            x-on:closemodals.window="open = ( id == event.detail.except ?? null ) ? true : false"
+
+            x-init="$watch('open', function(value) {
+                if( value ) { $dispatch( 'closemodals', { except: '{{uuid}}' } ) }
+            } )"
+
+            x-id="['modal-title']"
+
+            role="dialog"
+
+            aria-modal="true"
+
+            :aria-labelledby="$id('modal-title')"
+
+            x-transition.opacity
+            x-show="open"
+            x-init="setWidth()"
+            x-on:keydown.escape.prevent.stop="open = false"
+            x-trap.noscroll.inert="open"
+            @resize.window.debounce="setWidth()"
+            class="{{ block('outerclass') }}"
+        >
+            <div x-on:click="open=false" class="{{ block('overlayclass') }}"></div>
+            <div data-theme="{{theme}}" class="{{ block('modalclass') }} canvas">
+                {% block headline %}
+                    {% if headline ?? null %}
+                        <h2 class="pr-10" :id="$id('modal-title')">{{ headline }}</h2>
+                    {% endif %}
+                {% endblock %}
+
+                {% block content content %}
+
+                {% block close %}
+                    <div class="
+                        absolute
+                        right-0
+                        top-0
+                        z-30
+                        h-10
+                        w-10
+                        rounded-tr-xl
+                        flex
+                        items-center
+                        justify-center
+                        opacity-50
+                        hover:opacity-100
+                        origin-top-right
+                        transition
+                    "><button type="button" x-on:click="open=false">
+                        {{ svg('@svg/dismiss.svg') | attr({
+                            class: 'fill-theme-accent hover:fill-theme-link'
+                        }) }}
+                    </button></div>
+                {% endblock %}
+            </div>
+        </div>
+    </template>
+{% endblock %}
+
+
+
+{## Dynamic Modal Component
+{---------------------------------------------------------------------------------------}
+
+ 1| Make sure you are including htmx in your project (vite or <script> CDN).
+    https://htmx.org/docs/#installing
+
+
+ 2| Include the modal component before your closing </body> (like below), or use the
+    existing {%- macro dynamic_target() -%} as a template to create your own version.
+
+        {% import "burton/modal" as modal %}
+        {{ modal.dynamic_target() }}
+        </body>
+
+
+ 3| Trigger the Modal using one of the examples below. The <a> example is typically
+    preferable as it has a non-js fallback URL.
+
+    <a
+        href="/path/to/content"
+        hx-get="/path/to/content"
+        hx-target="#modal__dynamic"
+        hx-ext="ajax-header">Open a Modal</a>
+
+    -- OR --
+
+    <button
+        hx-get="/path/to/content"
+        hx-target="#modal__dynamic"
+        hx-ext="ajax-header"
+    >Open a Modal</button>
+
+{---------------------------------------------------------------------------------------}
+    The `hx-ext="ajax-header"` attribute will trigger Craft to report the request as an
+    AJAX request. This is useful for conditionally loading content based on whether the
+    request is loading full page or in a modal (see `burton/template.twig`).
+
+    Note: `hx-ext="ajax-header"` is inheritable and can be put on the <body> tag, but
+    I noticed some issues interacting with Sprig, so I moved it to the button level.
+{-------------------------------------------------------------------------------------##}
+{%- macro dynamic_target() -%}
+    <div
+        role="dialog"
+        aria-modal="true"
+
+        x-data="{
+            open:false,
+            onAfterSwap() {
+                this.open = true
+            },
+            doClose() {
+                this.open = false
+            }
+        }"
+
+        x-cloak
+        x-show="open"
+        x-on:keydown.escape.window="doClose()"
+        x-on:htmx:after-swap="onAfterSwap()"
+
+        class="flex justify-center items-center overflow-hidden"
+        :class="{
+            'fixed top-0 right-0 bottom-0 left-0 z-50 bg-black/70': open
+        }"
+    >
+        <div class="absolute top-0 right-0 bottom-0 left-0" x-on:click="doClose()"></div>
+
+        <div
+            x-trap.noscroll.inert="open"
+            class="relative w-full max-w-3xl rounded-xl max-h-[90vh] overflow-hidden bg-theme-contrast-light shadow-lg z-50"
+        >
+            <div class="p-2 absolute top-0 left-0 right-0 z-50 flex justify-end">
+                <a href="#" x-on:click.prevent="doClose()" class="flex gap-2 items-center text-theme-link hover:text-theme-link-tint"><span>Close</span><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M12,2C17.53,2 22,6.47 22,12C22,17.53 17.53,22 12,22C6.47,22 2,17.53 2,12C2,6.47 6.47,2 12,2M15.59,7L12,10.59L8.41,7L7,8.41L10.59,12L7,15.59L8.41,17L12,13.41L15.59,17L17,15.59L13.41,12L17,8.41L15.59,7Z" /></svg></a>
+            </div>
+            <div id="modal__dynamic" class="overflow-y-auto max-h-[90vh] pt-8 bg-theme-tint"></div>
+        </div>
+    </div>
+{%- endmacro -%}

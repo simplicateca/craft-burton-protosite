@@ -1,0 +1,20 @@
+{%- extends "_base/_template" -%}
+
+{%- if not currentUser.admin ?? null -%}
+    {%- redirect '/' -%}
+{%- endif -%}
+
+{%- block main -%}
+    {%- import "_burton" as b -%}
+    {{- b.container( tag( 'main', {
+        html: block('content'),
+    }), 'fluid' ) -}}
+{%- endblock -%}
+
+{%- block content -%}
+    <h1>Burton Action</h1>
+
+    <p>Action: {{ action ?? null }}</p>
+    <p>Slug: {{ slug ?? null }}</p>
+    <p>ActionSlug: {{ actionSlug ?? null }}</p>
+{%- endblock -%}

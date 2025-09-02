@@ -1,0 +1,17 @@
+{%- extends "_base/_template" -%}
+
+{%- if not currentUser.admin ?? null -%}
+    {%- redirect '/' -%}
+{%- endif -%}
+
+{%- block main -%}
+    {%- import "_burton" as b -%}
+    {{- b.container( tag( 'main', {
+        html: block('content'),
+    }), 'fluid' ) -}}
+{%- endblock -%}
+
+{%- block content -%}
+    <h1>Burton Help</h1>
+    <p>Welcome to the Burton Help section. Here you can find information about how to use the Burton theme and its features.</p>
+{%- endblock -%}

@@ -1,0 +1,212 @@
+{%- macro layout__search( items = [] ) -%}
+    {%- import "_burton" as b -%}
+
+    {%- if items is not empty -%}
+        {%- set items = (varargs.card ?? null) ? items|map( m => b.card( m, ...varargs ) ) : items -%}
+    {%- endif -%}
+
+    {% if craft.app.request.getHeaders().get('HX-Request') %}
+        {% header "HX-Push-Url: " ~ craft.app.request.getAbsoluteUrl() %}
+    {% endif %}
+
+    {%- set id = "search#{ varargs.id ?? null }" -%}
+    {%- tag 'form' with {
+        method: 'get',
+        id: id,
+        class: 'search-form flex flex-col gap-8 items-center scroll-mt-10',
+        hx: {
+            get: '?',
+            select: "#" ~ id,
+            target: "#" ~ id,
+            swap: "outerHTML ignoreTitle:true show:top"
+        }
+    } -%}
+
+        <div class="flex gap-8 items-center justify-between w-full">
+            {{- varargs.topicFilter ?? null is not empty ? tag( 'div', { html: b.search( varargs.topicFilter, 'topicFilter', ...varargs ) } ) -}}
+            {{- varargs.query ?? null == 'above' ? tag( 'div', { html: b.search( 'q', 'query', ...varargs ) } ) -}}
+        </div>
+
+        {%- if craft.app.request.getQueryParams() is empty ? varargs.autosearch ?? true : true -%}
+            {{ b.grid( items, ...varargs ) }}
+
+            {%- if varargs.pageinfo ?? null -%}
+                {{- b.search( varargs.pageinfo, 'pagination' ) -}}
+            {%- endif -%}
+        {%- endif -%}
+
+        {{- varargs.query ?? null == 'below' ? b.search( 'q', 'query', ...varargs ) -}}
+    {%- endtag -%}
+{%- endmacro %}
+
+
+{% macro query( name = 'q' ) %}
+    {%- set value = craft.app.request.getQueryParam(name) -%}
+    {%- set label = varargs.label ?? "Search" -%}
+    {%- set submit = varargs.submit ?? varargs.label ?? "Search" -%}
+    {%- set button = varargs.button ?? "button -ml-4 relative z-20" -%}
+    {%- set placeholder = varargs.placeholder ?? "Search..." -%}
+
+    {% set queryParams = craft.app.request.queryParams|withoutKey('q')|url_encode|trim %}
+    {% set pageUrl = craft.app.request.pathInfo %}
+    {% set pageUrl = queryParams ? pageUrl ~ "?#{queryParams}" : pageUrl %}
+
+    <div role="search">
+        {{- tag("label", { for: "input-#{name}", class: "sr-only", text: label }) -}}
+        <div class="flex">
+            <div class="relative">
+                {{- tag("input", {
+                    id: "input-#{name}",
+                    type: "search",
+                    name: name,
+                    value: value,
+                    placeholder: placeholder,
+                    hx: {
+                        trigger: "keyup changed delay:300ms",
+                        get: pageUrl
+                    },
+                    class: "pr-10"
+                }) -}}
+
+                {% if value %}
+                    <a class="absolute right-8 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                       aria-label="Clear search"
+                       href="{{ pageUrl }}"
+                       hx-get="{{ pageUrl }}"
+                    >×</a>
+                {% endif %}
+            </div>
+            {{- tag("button", { type: "submit", class: button, text: submit }) -}}
+        </div>
+    </div>
+{% endmacro %}
+
+
+{## Basic Pagination ##}
+{%- macro pagination( pageinfo = null ) -%}
+
+    {% set currentPage = pageinfo.currentPage %}
+    {% set totalPages = pageinfo.totalPages %}
+    {% set prevUrl = pageinfo.prevUrl %}
+    {% set nextUrl = pageinfo.nextUrl %}
+    {% set queryParams = craft.app.request.queryParams|withoutKey('page') %}
+
+    {%- if pageinfo.totalPages > 1 -%}
+        <nav
+            role="navigation"
+            aria-label="Result Page Navigation"
+            class="mx-auto flex flex-col items-center justify-center max-w-xs @container"
+        >
+            {%- tag 'ul' with {
+                class: "pagination-list flex items-center gap-2"
+            } -%}
+
+                <li class="list-none">
+                    {{ tag(prevUrl ? 'a' : 'span', {
+                        class: prevUrl
+                            ? 'pagination-prev px-3 py-1 border rounded hover:bg-gray-200'
+                            : 'pagination-prev disabled px-3 py-1 border rounded text-gray-400 cursor-not-allowed',
+                        href: prevUrl ? prevUrl ~ '?' ~ queryParams|url_encode : null,
+                        'hx-get': prevUrl ? prevUrl ~ '?' ~ queryParams|url_encode,
+                        'aria-label': prevUrl ? 'Previous page' : null,
+                        html: "‹&nbsp;Prev"
+                    }) }}
+                </li>
+
+                {# Calculate rolling window bounds #}
+                {% set windowSize = 8 %}
+                {% set startPage = 1 %}
+                {% set endPage = totalPages %}
+
+                {% if totalPages > windowSize %}
+                    {% if currentPage < 4 %}
+                        {% set startPage = 1 %}
+                        {% set endPage = windowSize %}
+                    {% elseif currentPage > totalPages - 4 %}
+                        {% set startPage = totalPages - windowSize + 1 %}
+                        {% set endPage = totalPages %}
+                    {% else %}
+                        {% set startPage = currentPage - 3 %}
+                        {% set endPage = currentPage + 4 %}
+                    {% endif %}
+                {% endif %}
+
+                {# Page Numbers with rolling window #}
+                {% for page in startPage..endPage %}
+                    <li class="list-none">
+                        {%- set href = page == currentPage ? null : (page == 1
+                            ? url(craft.app.request.pathInfo) ~ '?' ~ queryParams|url_encode
+                            : url(craft.app.request.pathInfo ~ '/p' ~ page) ~ '?' ~ queryParams|url_encode
+                        ) -%}
+
+                        {{ tag(page == currentPage ? 'span' : 'a', {
+                            class: page == currentPage
+                                ? 'pagination-current px-3 py-1 border rounded bg-gray-300 font-semibold'
+                                : 'pagination-page px-3 py-1 border rounded hover:bg-gray-200',
+                            href: href,
+                            'hx-get': href,
+                            'aria-label': page == currentPage ? null : 'Go to page ' ~ page,
+                            text: page
+                        }) }}
+                    </li>
+                {% endfor %}
+
+                {# Next Page Link #}
+                <li class="list-none">
+                    {{ tag(nextUrl ? 'a' : 'span', {
+                        class: nextUrl
+                            ? 'pagination-next px-3 py-1 border rounded hover:bg-gray-200'
+                            : 'pagination-next disabled px-3 py-1 border rounded text-gray-400 cursor-not-allowed',
+                        href: nextUrl ? nextUrl ~ '?' ~ queryParams|url_encode : null,
+                        'hx-get': nextUrl ? nextUrl ~ '?' ~ queryParams|url_encode,
+                        'aria-label': nextUrl ? 'Next page' : null,
+                        html: "Next&nbsp;›"
+                    }) }}
+                </li>
+            {%- endtag -%}
+        </nav>
+    {%- endif -%}
+{%- endmacro -%}
+
+
+{%- macro topicFilter( entryIds = [] ) -%}
+    {%- set topics = craft.entries.id(entryIds).all() -%}
+    {%- set activeId = craft.app.request.getQueryParam('f') ?? null -%}
+    {%- set queryParams = craft.app.request.queryParams|withoutKey('f')|url_encode -%}
+    {%- set pageUrl = craft.app.request.pathInfo ~ "?#{queryParams}" -%}
+    <div class="flex flex-row gap-4 mx-auto" role="radiogroup" aria-label="Topic Filters">
+        {%- for t in topics -%}
+            {%- set isActive = (t.id|string == activeId|string) -%}
+            {# Construct the URL: remove 'f' param if active, else point to filter #}
+            {%- if isActive %}
+                {# Clicking unsets filter: go to base URL without 'f' #}
+                {%- set url = craft.app.request.pathInfo ~ "?#{queryParams}" -%}
+            {%- else %}
+                {# Set filter to this topic #}
+                {%- set url = pageUrl ~ '&f=' ~ t.id -%}
+            {%- endif -%}
+            <button
+                id="topic-{{ t.id }}"
+                class="button button_small {{ not isActive ? 'button_ghost' }}"
+                hx-get="{{ url }}"
+                aria-pressed="{{ isActive ? 'true' : 'false' }}"
+            >{{ t.title ?? 'Topic' }}</button>
+        {%- endfor -%}
+    </div>
+{%- endmacro -%}
+
+
+{## No Results Message ##}
+{## TODO: I don't think this is being called ##}
+{%- macro noresults( search, settings ) -%}
+    <div class="max-w-5xl mx-auto @container mb-8">
+        <p class="html larger text-center">
+            <strong>Sorry</strong>, we could not find any matches for your search.
+        </p>
+    </div>
+{%- endmacro -%}
+
+
+
+{## TODO: Load More / Endless Sroll Pagination ##}
+{%- macro loadmore( search, settings ) -%}{%- endmacro -%}

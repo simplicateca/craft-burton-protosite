@@ -1,0 +1,12 @@
+{## Embedable Third-Party URL (oEmbed)
+{-------------------------------------------------------------------------------------##}
+{%- set element = element ?? null -%}
+{%- if element.website ?? null -%}
+    {%- set oembed = MediaBase( element.website.url ) -%}
+    {%- if oembed.code is defined %}
+        {{- oembed.code | retconAttr( 'iframe', {
+            class : 'w-full h-auto',
+            width : false,
+            height: false }) -}}
+    {%- endif -%}
+{%- endif -%}

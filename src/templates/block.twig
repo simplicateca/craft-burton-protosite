@@ -1,0 +1,332 @@
+{% extends "_burton/partial" -%}
+
+{## Render Block
+{-------------------------------------------------------------------------------------##}
+{% block output -%}
+    {%- set block = block ?? null -%}
+    {%- set settings = settings ?? {} -%}
+    {%- set loops = loops ?? {} -%}
+
+    {%- set settings = settings | merge({
+        zonelayout: ( loops.block.index ?? 1 % 2 )
+            ? settings.zonereverse ?? settings.zonelayout ?? null
+            : settings.zonelayout ?? null,
+        zonereverse: null
+    }, true ) -%}
+
+    {%- if settings.zonesuffix ?? 'none' != 'none' -%}
+        {%- set settings = settings | merge({
+            zonelayout: ["#{settings.zonelayout}-#{settings.zonesuffix}", settings.zonelayout ]
+        }, true ) -%}
+    {%- endif -%}
+
+    {%- set blockContent = block('blockContent') | trim -%}
+
+    {%- if blockContent is not empty -%}
+        {%- if loops.block.index ?? null > 1 -%}
+            {{- block( 'beforeContent' ) -}}
+        {%- endif -%}
+
+        {%- set blockContent = _self.tagOrRaw( blockContent, tag ?? null, {
+            data: { monitor: true },
+            class: ["w-full relative z-20 @container"],
+            'x-data': "{ open: false }",
+        }) -%}
+
+        {%- import "_burton" as b -%}
+        {{- b.container( blockContent, settings.container ?? 'none' ) -}}
+    {%- endif -%}
+{%- endblock -%}
+
+
+{%- block beforeContent -%}
+    {%- import "_burton" as b -%}
+    {{- b.sep( block, settings.spacer ?? 'medium' ) -}}
+{%- endblock -%}
+
+
+{%- block blockContent -%}
+    {%- if block.html ??? null -%}
+        {{- raw( block.html ) -}}
+    {%- else -%}
+        {%- import "_burton" as b -%}
+        {{- b.zonelayout({
+            zone1 : block('zone1'),
+            zone2 : block('zone2'),
+            header: block('header'),
+            footer: block('footer')
+        }, ...settings ) -}}
+    {%- endif -%}
+{%- endblock -%}
+
+
+{## [Zone Content] Block Intro
+{-------------------------------------------------------------------------------------##}
+{% block header -%}
+    {%- import "_burton" as b -%}
+    {{- b.text( TextBase( block.intro ?? block.introHeader ?? "" ).body,
+        "blockH1" ) -}}
+{% endblock %}
+
+
+{## [Zone Content] Block Outro
+{-------------------------------------------------------------------------------------##}
+{%- block footer -%}
+    {{- TextBase( block.text ?? block.textHeader ?? "" ).body
+        | retconOnly( ['.outro'] ) -}}
+{%- endblock -%}
+
+
+{## [Zone Content] Zone 1
+{-------------------------------------------------------------------------------------##}
+{% block zone1 -%}
+    {{- TextBase( block.text ?? block.textHeader ?? "" ).body
+        | retconRemove( ['.outro'] ) -}}
+
+    {%- if 'interactive' == settings.format ?? null -%}
+        <p>
+            <button x-on:click="open = !open" class="button">See More</button>
+        </p>
+    {%- endif -%}
+{%- endblock %}
+
+
+{## [Zone Content] Zone 2
+{-------------------------------------------------------------------------------------##}
+{%- block zone2 -%}
+    {%- set zone2Type = block.type.handle ?? block.type ?? null -%}
+    {{ zone2Type in ["bits", "component", "deck", "image", "media", "text", "fragment"]
+        ? block("zone2__#{zone2Type}")
+        : block("zone2__unknown") -}}
+{%- endblock -%}
+
+
+{## [Block Type] Bits
+{-------------------------------------------------------------------------------------##}
+{%- block zone2__bits -%}
+    {%- set limit = settings.limit ?? 100 -%}
+    {%- set limit = limit == 0 ? -1 : limit -%}
+    {%- set bits = [] -%}
+
+    {% switch block.source ?? null %}
+        {% case "collection" %}
+            {%- set select = settings.filter ?? request.getParam('f') ?? null -%}
+            {%- set avail  = collect( block.collections ?? settings.collections ?? [] ) -%}
+            {%- set bits = collection( avail.firstWhere( 'slug', select ) ?? avail.first() ) -%}
+        {% default %}
+            {%- set bits = collect( block.bits ?? settings.bits ?? [] ) -%}
+            {%- set bits = craft.entries()
+                .id( bits | map( e => e.id ) | filter( id => id is not empty ) )
+                .fixedOrder( settings.orderBy ?? null is empty ) -%}
+    {% endswitch %}
+
+    {%- if bits and className(bits) != 'Illuminate\\Support\\Collection' -%}
+        {%- if settings.topicFilter ?? null is not empty  -%}
+            {%- set f = craft.app.request.getQueryParam('f') ?? null -%}
+            {%- set bits = f ? bits.relatedTo(f) : bits -%}
+        {%- endif -%}
+
+        {%- if settings.orderBy ?? null is not empty -%}
+            {%- set bits = bits.orderBy(settings.orderBy) -%}
+        {%- endif -%}
+
+        {%- if limit > 0 -%}
+            {%- set bits = bits.limit(limit) -%}
+        {%- endif -%}
+
+        {%- set bits = collect( bits ).all() -%}
+    {%- endif -%}
+
+    {%- import "_burton" as b -%}
+    {{- bits ? b.layout( bits, ...settings ) -}}
+{%- endblock -%}
+
+
+{## [Block Type] Component
+{-------------------------------------------------------------------------------------##}
+{%- block zone2__component -%}
+    {{- renderMacroIfExists(
+        _path ?? ["_base/block", "_theme/block", "_burton/block"],
+        ["component__#{block.source}", "component__#{block.component.type ??? null}" ],
+        block ?? null,
+        settings ?? {}
+    ) | raw -}}
+{%- endblock -%}
+
+
+{## [Block Type] Deck
+{-------------------------------------------------------------------------------------##}
+{%- block zone2__deck -%}
+    {%- set limit = settings.limit ?? 100 -%}
+    {%- set limit = limit == 0 ? -1 : limit -%}
+    {%- set cards = [] -%}
+
+    {% switch block.source ?? null %}
+        {% case "collection" %}
+            {%- set select = settings.filter ?? request.getParam('f') ?? null -%}
+            {%- set avail  = collect( block.collections ?? settings.collections ?? [] ) -%}
+            {%- set cards = collection( avail.firstWhere( 'slug', select ) ?? avail.first() ) -%}
+        {% default %}
+            {%- set cards = collect( block.entries ?? settings.entries ?? [] ) -%}
+            {%- set cards = craft.entries()
+                .id( cards | map( e => e.id ) | filter( id => id is not empty ) )
+                .fixedOrder( settings.orderBy ?? null is empty ) -%}
+    {% endswitch %}
+
+    {%- if cards and className(cards) != 'Illuminate\\Support\\Collection' -%}
+        {%- if settings.query ?? null is not empty -%}
+            {%- set q = craft.app.request.getQueryParam('q') ?? null -%}
+            {%- set cards = q ? cards.search(q) : cards -%}
+        {%- endif -%}
+
+        {%- if settings.topicFilter ?? null is not empty  -%}
+            {%- set f = craft.app.request.getQueryParam('f') ?? null -%}
+            {%- set cards = f ? cards.relatedTo(f) : cards -%}
+        {%- endif -%}
+
+        {%- if settings.orderBy ?? null is not empty -%}
+            {%- set cards = cards.orderBy(settings.orderBy) -%}
+        {%- endif -%}
+
+        {%- if limit > 0 -%}
+            {%- set cards = cards.limit(limit) -%}
+        {%- endif -%}
+
+        {%- if settings.pagination ?? null and settings.pagination != 'null' -%}
+            {%- paginate cards as pageinfo, cards -%}
+            {%- set settings = settings | merge({ pageinfo: pageinfo }) -%}
+        {%- endif -%}
+
+        {%- set cards = collect( cards ).all() -%}
+    {%- endif -%}
+
+    {%- import "_burton" as b -%}
+    {{- cards[0] ?? null ? b.layout( cards, ...settings ) -}}
+{%- endblock -%}
+
+
+{## [Block Type] Image
+{-------------------------------------------------------------------------------------##}
+{%- block zone2__image -%}
+    {%- set limit  = settings.limit ?? 100 -%}
+    {%- set limit  = limit > 0 ? limit : 1 -%}
+    {%- set images = [] -%}
+
+    {% switch block.source ?? null %}
+        {% case "collection" %}
+            {%- set select = settings.filter ?? request.getParam('f') ?? null -%}
+            {%- set avail  = collect( block.collections ?? settings.collections ?? [] ) -%}
+            {%- set images = collection( avail.firstWhere( 'slug', select ) ?? avail.first() ) -%}
+        {% default %}
+            {%- set images = collect( block.images ?? block.image ?? settings.images ?? settings.image ).slice(0, limit).all() -%}
+    {% endswitch %}
+
+    {## Look for Auto-Linking
+    {---------------------------------------------------------------------------------##}
+    {# {%- set text1    = TextBase(block.text) ??? null %}
+    {%- set autolink = ( text1.action ??? text1.body ) | retconOnly( "a[data-only-link]" ) -%}
+    {%- set autolink = autolink ? autolink|parseAttr : null -%}
+    {%- if autolink.href ??? null -%}
+        {%- set args = args|merge({ autolink: autolink.href }) -%}
+    {%- endif -%} #}
+
+    {%- import "_burton" as b -%}
+    {%- set images = images | map( m => b.image( m, ...settings ) ) -%}
+    {{- images ? b.layout( images, ...settings ) -}}
+{%- endblock -%}
+
+
+{## [Block Type] Media
+{-------------------------------------------------------------------------------------##}
+{%- block zone2__media -%}
+    {%- set limit  = settings.limit ?? 100 -%}
+    {%- set limit  = limit > 0 ? limit : 1 -%}
+    {%- set medias = [] -%}
+
+    {% switch block.source ?? null %}
+        {% case "embed" %}
+            {%- set medias = collect( block.embeds ?? settings.embeds ).slice(0, limit).all() -%}
+        {% case "collection" %}
+            {%- set select = settings.filter ?? request.getParam('f') ?? null -%}
+            {%- set avail  = collect( block.collections ?? settings.collections ?? [] ) -%}
+            {%- set medias = collection( avail.firstWhere( 'slug', select ) ?? avail.first() ) -%}
+        {% default %}
+            {%- set medias = collect( block.medias ?? settings.medias ).slice(0, limit).all() -%}
+    {% endswitch %}
+
+    {%- import "_burton" as b -%}
+    {%- set medias = medias | map( m => b.media( m, ...settings ) ) -%}
+    {{- b.layout( medias, ...settings ) -}}
+{%- endblock -%}
+
+
+
+{## [Block Type] Text
+{-------------------------------------------------------------------------------------##}
+{%- block zone2__text -%}
+    {{- settings.secondary ?? null != 'copyNone'
+        ? raw( TextBase( block.text2 ?? "" ).body ?? "" ) -}}
+{%- endblock -%}
+
+
+{## [Block Type] Fragment
+{-------------------------------------------------------------------------------------##}
+{%- block zone2__fragment -%}
+    {%- if 'interactive' == settings.format ?? null  -%}
+        {%- import "_burton" as b -%}
+
+        <div
+            x-cloak
+            x-show="open"
+            x-transition
+            class="relative @container"
+        >
+            {%- for fragment in block.fragments.all() -%}
+                {%- set fContent = b.builder( fragment.builder.all() ?? [], 'fragment' ) -%}
+                {{- fContent
+                    | retconChange( 'section[data-theme]', false )
+                    | retconChange( '[data-container]', false ) -}}
+            {%- endfor -%}
+        </div>
+
+        {## Interactive Modal Version
+        {-------------------------------------------------------------------------------##}
+        {# {%- set content = tag('div') -%}
+        {%- for fragment in block.fragments.all() -%}
+            {%- set content = content | append( b.builder( fragment.builder.all() ?? [], 'fragment' ) ) -%}
+        {%- endfor -%}
+
+        {{- include( ["_base/modal", "_theme/modal", "_burton/modal"], {
+            content: raw( content )
+        }, withContext = false ) -}} #}
+    {%- endif -%}
+{%- endblock -%}
+
+
+{## [Block Type] Unknown
+{-------------------------------------------------------------------------------------##}
+{%- block zone2__unknown -%}
+    <h1>Unknown Block</h1>
+{%- endblock -%}
+
+
+{## Component Macros
+{-------------------------------------------------------------------------------------##}
+{%- macro component__form( block ) -%}
+    {%- set form = craft.formie.forms({ handle: block.component.handle }).one() %}
+    {%- if form -%}
+        {% do craft.formie.populateFormValues( form, { parentEntry: block.primaryOwnerId ?? null } ) %}
+        {{- craft.formie.renderForm( form, { themeConfig: varargs.themeConfig ?? {} } ) -}}
+    {%- endif -%}
+{%- endmacro -%}
+
+
+{%- macro component__embed( block ) -%}
+    {{- block.code | raw -}}
+{%- endmacro -%}
+
+
+{%- macro component__menu( block ) -%}
+    {%- import "_burton" as b -%}
+    {{- b.menu( block.component.handle, ...varargs ) -}}
+{%- endmacro -%}
