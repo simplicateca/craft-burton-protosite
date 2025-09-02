@@ -14,17 +14,17 @@
     "prefer-stable": true,
     "minimum-stability": "beta",
     "require": {
-        "craftcms/cms": "^5.4.8",
-        "craftcms/ckeditor": "^4.3.0",
+        "craftcms/cms": "^5.6.1",
+        "craftcms/ckeditor": "^4.10.1",
         "simplicateca/metasettings": "^5.2.0",
         "simplicateca/burton-theme-solo": "dev-develop",
         "topshelfcraft/environment-label": "^5.0.0",
         "nystudio107/craft-emptycoalesce": "^5.0.0",
-        "behinddesign/craft-object-storage": "^1.1.0",
+        "behinddesign/craft-object-storage": "^1.1.1",
         "embed/embed": "^4.4.12",
-        "verbb/formie": "^3.0.9",
-        "verbb/navigation": "^3.0.5",
-        "mmikkel/retcon": "^3.2.0"
+        "verbb/formie": "^3.1.2",
+        "verbb/navigation": "^3.0.11",
+        "mmikkel/retcon": "^3.2.1"
     },
     "autoload": {
         "psr-4": {
