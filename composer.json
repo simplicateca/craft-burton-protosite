@@ -40,6 +40,6 @@
         }
     },
     "extra": {
-        "bootstrap": "simplicateca\\burton\\Burton"
+        "class": "simplicateca\\burton\\Burton"
     }
 }
