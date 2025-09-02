@@ -1,5 +1,5 @@
 {
-    "name": "simplicateca/craft-burton-protosite",
+    "name": "simplicateca/burton-protosite",
     "description": "Burton is a Craft CMS 5+ Protosite",
     "type": "craft-plugin",
     "keywords": ["craft-cms", "theme", "custom-theme", "protosite", "atomic-design"],
@@ -11,6 +11,8 @@
     "support": {
         "email" : "info@simplicate.ca"
     },
+    "prefer-stable": true,
+    "minimum-stability": "beta",
     "require": {
         "craftcms/cms": "^5.4.8",
         "craftcms/ckeditor": "^4.3.0",
