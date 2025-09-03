@@ -2,11 +2,16 @@
 
 namespace simplicateca\burton;
 
+use Craft;
+use craft\web\View;
+use craft\events\RegisterTemplateRootsEvent;
+use craft\web\twig\variables\CraftVariable;
 use simplicateca\burton\base\BurtonThemeBase;
+
+use yii\base\Event;
 
 class Burton extends BurtonThemeBase
 {
-    // protected ?string $_moduleAlias = '@modules/burton';
     protected ?string $_consoleNamespace = 'simplicateca\\burton\\console\\controllers';
 
     protected array $_extensions = [
@@ -17,10 +22,6 @@ class Burton extends BurtonThemeBase
         \simplicateca\burton\twigextensions\MediaBaseTwig::class,
         \simplicateca\burton\twigextensions\HelpersTwig::class,
         \simplicateca\burton\twigextensions\MacroChainTwig::class,
-    ];
-
-    protected array $_siteTemplatePath = [
-        '_burton' => __DIR__ . DIRECTORY_SEPARATOR . 'templates',
     ];
 
     protected array $_translations = [
@@ -36,4 +37,49 @@ class Burton extends BurtonThemeBase
     protected array $_cpAssetBundles = [
         \simplicateca\burton\assetbundles\burton\BurtonAsset::class,
     ];
+
+
+    public function init() : void
+    {
+        parent::init();
+
+        $activeTheme = collect(Craft::$app->plugins->allPluginInfo)
+            ->filter(function ($value, $key) {
+                return strstr( $value["packageName"], "burton" ) && strstr( $value["packageName"], "theme" ); })
+            ->where( "isInstalled", true )
+            ->one();
+
+        $themePath = array_values( $activeTheme["aliases"] ?? null )[0] ?? null;
+
+        $this->_siteTemplatePath = [
+            '_burton' => array_filter( [
+                $themePath . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . '_burton',
+                $this->getBasePath() . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . '_burton',
+            ])
+        ];
+
+        $this->siteTemplateRoots();
+
+        Event::on(
+            CraftVariable::class,
+            CraftVariable::EVENT_INIT,
+            function(Event $event) {
+                $variable = $event->sender;
+                $variable->set('burton', \simplicateca\burton\variables\BurtonVariable::class);
+            }
+        );
+    }
+
+    private function siteTemplateRoots(): void
+    {
+        Event::on(
+            View::class,
+            View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS,
+            function(RegisterTemplateRootsEvent $event) {
+                foreach ($this->_siteTemplatePath as $handle => $path) {
+                    $event->roots[$handle] = $path;
+                }
+            }
+        );
+    }
 }

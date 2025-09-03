@@ -1,4 +1,4 @@
-{%- extends "_burton/partial" -%}
+{%- extends "_burton/base/partial" -%}
 
 
 {## Card Defaults
@@ -111,7 +111,7 @@
 
     {%- if action == 'tease' and url -%}
         {%- import "_burton" as b -%}
-        {{- include( ["_base/modal", "_theme/modal", "_burton/modal"], {
+        {{- include( ["_burton/local/modal", "_burton/theme/modal", "_burton/base/modal"], {
             content: b.card( element, 'modaltease' )
         }, withContext = false ) -}}
     {%- endif -%}
@@ -126,14 +126,14 @@
         element: CardBase( element ),
     } | merge( varargs, true ) -%}
 
-    {%- set path = ["_base/card", "_theme/card", "_burton/card"] -%}
+    {%- set path = ["_burton/local/card", "_burton/theme/card", "_burton/base/card"] -%}
     {{- element ? include( path, params, withContext: false ) -}}
 {%- endmacro -%}
 
 
 {%- macro card__summary( element = null ) -%}
     {%- if element -%}
-        {%- embed ["_base/card", "_theme/card", "_burton/card"] with {
+        {%- embed ["_burton/local/card", "_burton/theme/card", "_burton/base/card"] with {
             element: CardBase( element ),
             figure: { layer: 'widescreen' },
         } | merge( varargs, true ) -%}
@@ -158,7 +158,7 @@
 
 {%- macro card__spotlight( element = null ) -%}
     {%- if element -%}
-        {%- embed ["_base/card", "_theme/card", "_burton/card"] with {
+        {%- embed ["_burton/local/card", "_burton/theme/card", "_burton/base/card"] with {
             element: CardBase( element ),
             figure: { layer: 'widescreen' },
         } | merge( varargs, true ) -%}
@@ -171,7 +171,7 @@
 
 {%- macro card__panel( element = null ) -%}
     {%- if element -%}
-        {%- embed ["_base/card", "_theme/card", "_burton/card"] with {
+        {%- embed ["_burton/local/card", "_burton/theme/card", "_burton/base/card"] with {
             element: CardBase( element ),
             figure: { layer: 'floatright' },
             click : 'button',
@@ -184,7 +184,7 @@
 
 {%- macro card__modaltease( element = null ) -%}
     {%- if element -%}
-        {%- embed ["_base/card", "_theme/card", "_burton/card"] with {
+        {%- embed ["_burton/local/card", "_burton/theme/card", "_burton/base/card"] with {
             element: CardBase( element ),
             figure: { layer: 'floatright' },
             click : 'button',

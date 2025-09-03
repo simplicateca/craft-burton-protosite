@@ -1,0 +1,5 @@
+{%- extends source("_burton/local/assemble", ignore_missing = true)
+    ? "_burton/local/assemble"
+    : source("_burton/theme/assemble", ignore_missing = true)
+        ? "_burton/theme/assemble"
+        : "_burton/base/assemble" -%}

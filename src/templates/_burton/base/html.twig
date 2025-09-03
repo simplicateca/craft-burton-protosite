@@ -1,4 +1,4 @@
-{%- extends "_burton/partial" -%}
+{%- extends "_burton/base/partial" -%}
 
 {## Dynamic Extends & Ajax Requests
 {---------------------------------------------------------------------------------------}
@@ -119,7 +119,7 @@
 
     How to Use:
 {---------------------------------------------------------------------------------------}
-    {%- from "_base/_template" import prefetch -%}
+    {%- from "_burton/local/_template" import prefetch -%}
     {{- prefetch([
         'https://unpkg.com',
         'https://fonts.googleapis.com',

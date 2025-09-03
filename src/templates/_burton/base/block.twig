@@ -1,4 +1,4 @@
-{% extends "_burton/partial" -%}
+{% extends "_burton/base/partial" -%}
 
 {## Render Block
 {-------------------------------------------------------------------------------------##}
@@ -146,7 +146,7 @@
 {-------------------------------------------------------------------------------------##}
 {%- block zone2__component -%}
     {{- renderMacroIfExists(
-        _path ?? ["_base/block", "_theme/block", "_burton/block"],
+        _path ?? ["_burton/local/block", "_burton/theme/block", "_burton/base/block"],
         ["component__#{block.source}", "component__#{block.component.type ??? null}" ],
         block ?? null,
         settings ?? {}
@@ -296,7 +296,7 @@
             {%- set content = content | append( b.builder( fragment.builder.all() ?? [], 'fragment' ) ) -%}
         {%- endfor -%}
 
-        {{- include( ["_base/modal", "_theme/modal", "_burton/modal"], {
+        {{- include( ["_burton/local/modal", "_burton/theme/modal", "_burton/base/modal"], {
             content: raw( content )
         }, withContext = false ) -}} #}
     {%- endif -%}

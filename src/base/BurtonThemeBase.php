@@ -3,16 +3,15 @@
 namespace simplicateca\burton\base;
 
 use Craft;
-use craft\web\UrlManager;
+use craft\base\Plugin;
 use craft\web\View;
-use craft\events\RegisterTemplateRootsEvent;
+use craft\web\UrlManager;
 use craft\events\RegisterUrlRulesEvent;
 
 use yii\base\Event;
-use yii\base\Module;
 use yii\base\InvalidConfigException;
 
-class BurtonThemeBase extends Module
+class BurtonThemeBase extends Plugin
 {
     protected array $_listeners = [];
     protected array $_components = [];
@@ -22,21 +21,14 @@ class BurtonThemeBase extends Module
     protected array $_translations = [];
     protected array $_cpAssetBundles = [];
 
-    protected ?string $_moduleAlias = null;
     protected ?string $_consoleNamespace = null;
 
     public function init(): void
     {
         parent::init();
 
-        // Register module alias (if set)
-        if ($this->_moduleAlias) {
-            Craft::setAlias($this->_moduleAlias, $this->getBasePath());
-        }
-
         $this->setComponents($this->_components);
         $this->twigExtensions();
-        $this->siteTemplateRoots();
         $this->siteUrlRules();
         $this->eventListeners();
         $this->translations();
@@ -60,19 +52,6 @@ class BurtonThemeBase extends Module
         foreach ($this->_extensions as $extension) {
             Craft::$app->view->registerTwigExtension(new $extension());
         }
-    }
-
-    private function siteTemplateRoots(): void
-    {
-        Event::on(
-            View::class,
-            View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS,
-            function(RegisterTemplateRootsEvent $event) {
-                foreach ($this->_siteTemplatePath as $alias => $path) {
-                    $event->roots[$alias] = $path;
-                }
-            }
-        );
     }
 
     private function siteUrlRules(): void

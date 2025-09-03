@@ -10,7 +10,7 @@
 {%- macro builder( data = null, name = null ) -%}
     {%- set entry = varargs.entry ?? null -%}
     {%- set type  = entry.type.handle ?? entry.type ?? varargs.type ?? null -%}
-    {%- set path  = ["_base/builder", "_theme/builder", "_burton/builder"] -%}
+    {%- set path  = ["_burton/local/builder", "_burton/theme/builder", "_burton/base/builder"] -%}
 
     {%- if type is string -%}
         {%- set path = path | map(template => "#{template}.#{type}") | merge( path ) -%}
@@ -31,11 +31,11 @@
     {%- set entry = varargs.entry ?? data -%}
     {%- set type  = entry.type.handle ?? entry.type ?? varargs.type ?? null -%}
     {%- set path = [
-     type ? "_base/#{type}",
-     type ? "_theme/#{type}",
-            "_base/card",
-            "_theme/card",
-            "_burton/card"
+     type ? "_burton/local/#{type}",
+     type ? "_burton/theme/#{type}",
+            "_burton/local/card",
+            "_burton/theme/card",
+            "_burton/base/card"
     ] | filter -%}
 
     {%- set name = name ?? varargs.card ?? null -%}
@@ -54,7 +54,7 @@
     {%- set name = name ?? varargs.container ?? null -%}
 
     {%- set params = {
-        path: ["_base/container", "_theme/container", "_burton/container" ],
+        path: ["_burton/local/container", "_burton/theme/container", "_burton/base/container" ],
         name: "container",
         data: data,
         args: { container: name } | merge( varargs, true ),
@@ -68,7 +68,7 @@
     {%- set name = name ?? varargs.grid ?? null -%}
     {%- set name = "grid_#{name}" -%}
     {%- set params = {
-        path: ["_base/grid", "_theme/grid", "_burton/grid"],
+        path: ["_burton/local/grid", "_burton/theme/grid", "_burton/base/grid"],
         name: "grid",
         data: data,
         args: { grid: name } | merge( varargs, true ),
@@ -83,7 +83,7 @@
     {%- set name = "image__#{name}" -%}
 
     {%- set params = {
-        path: ["_base/image", "_theme/image", "_burton/image"],
+        path: ["_burton/local/image", "_burton/theme/image", "_burton/base/image"],
         name: name ? [name, "image"] : "image",
         data: data,
         args: { layer: name } | merge( varargs, true ),
@@ -95,7 +95,7 @@
 
 {%- macro layout( data = null, name = null ) -%}
     {%- set name  = name ?? varargs.layout ?? null -%}
-    {%- set path  = ["_base/partial","_theme/partial", "_burton/partial"] -%}
+    {%- set path  = ["_burton/local/partial","_burton/theme/partial", "_burton/base/partial"] -%}
     {%- set names = ["layout"] -%}
 
     {%- if name is iterable and name[0] is string -%}
@@ -124,7 +124,7 @@
     {%- set name = "media_#{name}" -%}
 
     {%- set params = {
-        path: ["_base/media", "_theme/media", "_burton/media"],
+        path: ["_burton/local/media", "_burton/theme/media", "_burton/base/media"],
         name: name ? [name, "media"] : "media",
         data: data,
         args: { player: name } | merge( varargs, true ),
@@ -137,7 +137,7 @@
 {%- macro menu( data = null, name = null ) -%}
     {%- set name = name ?? varargs.format ?? ( data is string ? data : null ) -%}
     {%- set params = {
-        path: ["_base/menu", "_theme/menu", "_burton/menu"],
+        path: ["_burton/local/menu", "_burton/theme/menu", "_burton/base/menu"],
         name: [ data is string ? "menu__#{data}", name is string ? "menu__#{name}", "renderMenu" ],
         data: data,
         args: { format: name } | merge( varargs, true ),
@@ -151,7 +151,7 @@
     {%- set name = name ?? varargs.zonelayout ?? null -%}
 
     {%- set params = {
-        path: ["_base/zones", "_theme/zones", "_burton/zones"],
+        path: ["_burton/local/zones", "_burton/theme/zones", "_burton/base/zones"],
         name: "zonelayout",
         data: data,
         args: { zonelayout: name } | merge( varargs, true ),
@@ -163,7 +163,7 @@
 
 {%- macro search( data = null, name = null ) -%}
     {%- set params = {
-        path: ["_base/search", "_theme/search", "_burton/search"],
+        path: ["_burton/local/search", "_burton/theme/search", "_burton/base/search"],
         name: name ? name : "search",
         data: data,
         args: { interface: name } | merge( varargs, true ),
@@ -175,7 +175,7 @@
 {%- macro sep( data = null, name = null ) -%}
     {%- set name = name ?? varargs.separator ?? ( data is string ? data : null ) -%}
     {%- set params = {
-        path: ["_base/separator", "_theme/separator", "_burton/separator"],
+        path: ["_burton/local/separator", "_burton/theme/separator", "_burton/base/separator"],
         name: "separator",
         data: data,
         args: { separator: name } | merge( varargs, true )
@@ -186,7 +186,7 @@
 
 {%- macro text( data = null, name = null ) -%}
     {%- set params = {
-        path: ["_base/text", "_theme/text", "_burton/text"],
+        path: ["_burton/local/text", "_burton/theme/text", "_burton/base/text"],
         name: [ "text__#{name}", "text"],
         data: data,
         args: { format: name } | merge( varargs, true ),
@@ -198,7 +198,7 @@
 
 {%- macro theme( data = null, name = null ) -%}
     {%- set params = {
-        path: ["_base/group", "_theme/group", "_burton/group"],
+        path: ["_burton/local/group", "_burton/theme/group", "_burton/base/group"],
         name: [ "theme__#{name}", "theme" ],
         data: data,
         args: { theme: name } | merge( varargs, true )

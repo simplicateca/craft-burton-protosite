@@ -1,6 +1,6 @@
 {## [Core] Media Elements
 {-------------------------------------------------------------------------------------##}
-{%- extends "_burton/partial" -%}
+{%- extends "_burton/base/partial" -%}
 
 
 {## Template Variables
@@ -80,6 +80,6 @@
         element: element
     } | merge( varargs, true ) -%}
 
-    {%- set path = ["_base/media", "_theme/media", "_burton/media"] -%}
+    {%- set path = ["_burton/local/media", "_burton/theme/media", "_burton/base/media"] -%}
     {{- element ? include( path, params, withContext: false ) -}}
 {%- endmacro -%}

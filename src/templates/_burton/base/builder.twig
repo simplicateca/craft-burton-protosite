@@ -1,4 +1,4 @@
-{%- extends "_burton/partial" -%}
+{%- extends "_burton/base/partial" -%}
 
 {## Builder Macro
 {## TODO: This should be it's own template: burton/builder
@@ -17,11 +17,11 @@
     {%- set entry = varargs.entry ?? blocks[0].primaryOwner ?? null -%}
 
     {%- set blocks = BuilderBase( blocks, path: varargs.blockPath ?? [
-         "_base/block.%blocktype%",
-        "_theme/block.%blocktype%",
-         "_base/block",
-        "_theme/block",
-       "_burton/block"
+         "_burton/local/block.%blocktype%",
+        "_burton/theme/block.%blocktype%",
+         "_burton/local/block",
+        "_burton/theme/block",
+       "_burton/base/block"
     ] ) -%}
 
     {%- import "_burton" as b -%}

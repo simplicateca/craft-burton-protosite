@@ -2,7 +2,7 @@
 {---------------------------------------------------------------------------------------}
     Extending from an empty {% block %} makes it easier to keep things organized in here.
 {-------------------------------------------------------------------------------------##}
-{%- extends "_burton/partial" -%}
+{%- extends "_burton/base/partial" -%}
 
 
 {## Template Variables
@@ -61,7 +61,7 @@
         _placeholder: 'default',
     } | merge( varargs, true ) -%}
 
-    {%- set path = ["_base/image", "_theme/image", "_burton/image"] -%}
+    {%- set path = ["_burton/local/image", "_burton/theme/image", "_burton/base/image"] -%}
     {{- include( path, params, withContext = false ) -}}
 {%- endmacro -%}
 
@@ -185,7 +185,7 @@
     {%- set image = image ??? null -%}
     {%- set settings = settings ?? null is iterable ? settings : {} -%}
 
-    {%- set lightbox = settings.lightbox ??? ["_base/modal", "_theme/modal", "_burton/modal"] -%}
+    {%- set lightbox = settings.lightbox ??? ["_burton/local/modal", "_burton/theme/modal", "_burton/base/modal"] -%}
     {%- set content  = _self.imgtag( image, { imgclass: 'w-auto max-h-[70vh] mx-auto' } ) -%}
 
     {{ include( lightbox, { content: content, settings: settings }, with_context = false ) }}
