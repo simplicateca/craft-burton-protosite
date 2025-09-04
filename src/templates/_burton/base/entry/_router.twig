@@ -1,0 +1,33 @@
+{## Base Entry Router ➜ _burton/base/entry/_router.twig ----------------------}
+{##--------------------------------------------------------------------------#}
+{%- set entry = entry ?? null -%}
+{%- set type = entry.type.handle ?? null -%}
+{%- set section = entry.section.handle ?? null -%}
+{%- set slug = ( entry.uri ?? '' ) | slugify -%}
+{{- include( [
+    section and slug ? "_burton/local/#{section}.#{slug}",
+    section and slug ? "_burton/theme/#{section}.#{slug}",
+    section and type ? "_burton/local/#{section}.#{type}",
+    section and type ? "_burton/theme/#{section}.#{type}",
+                type ? "_burton/local/#{type}",
+                type ? "_burton/theme/#{type}",
+                type ? "_burton/base/#{type}",
+                       "_burton/local/entry/default",
+                       "_burton/theme/entry/default",
+                       "_burton/base/entry/default",
+] | filter, { entry: entry }, withContext: false ) -}}
+
+
+{## URI Formatting
+{-----------------------------------------------------------------------------}
+    IMPORTANT: Resave existing records via console if this macro changes
+{-----------------------------------------------------------------------------}
+  ➜ make craft "resave/entries --section=articles"
+  ➜ make craft "resave/entries"
+{---------------------------------------------------------------------------##}
+{%- macro uri_format( object ) -%}{%- apply spaceless -%}
+    {# {%- set types = object.type.handle | default('') | pluralize | slugify -%} #}
+    {%- set owner = object.primaryOwner.uri|default(null) -%}
+    {%- set slug  = object.slug ?? object.id ?? null -%}
+    {{- [owner, slug ] | filter | join('/') -}}
+{%- endapply -%}{%- endmacro -%}

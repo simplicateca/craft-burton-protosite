@@ -1,0 +1,8 @@
+{## Base Redirect Entry ➜ _burton/base/entry/redirect.twig -------------------}
+{##--------------------------------------------------------------------------#}
+{%- set destination = ( entry.entries.one() ?? {} ).url ?? entry.website ?? null -%}
+{%- if destination is not empty and entry.type.handle ?? null  == 'redirect' -%}
+    {%- redirect destination -%}
+{%- else -%}
+    {%- header "HTTP/1.0 404 Not Found" -%}
+{%- endif -%}

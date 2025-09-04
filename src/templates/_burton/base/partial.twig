@@ -116,30 +116,3 @@
         {{- result | json_encode | raw -}}
     {%- endif -%}
 {%- endmacro -%}
-
-
-{## Dynamic URI Generation Routing
-{---------------------------------------------------------------------------------------}
-    IMPORTANT: Resave existing records (via console) anytime this macro changes.
-{---------------------------------------------------------------------------------------}
-  ➜ make craft "resave/entries --section=articles"
-  ➜ make craft "resave/entries"
-{-------------------------------------------------------------------------------------##}
-{%- macro uri_format( object ) -%}{%- apply spaceless -%}
-    {%- set type = object.type.handle | default('') | pluralize | slugify -%}
-    {%- set slug = object.slug|default(null) -%}
-    {{- [type, slug ] | filter | join('/') -}}
-{%- endapply -%}{%- endmacro -%}
-
-
-
-{## Handle Redirects
-{-------------------------------------------------------------------------------------##}
-{%- macro redirect( entry ) -%}
-    {%- set url = entry.website ??? entry.entries.one().url ??? null -%}
-    {%- if url -%}
-        {%- redirect url -%}
-    {%- else -%}
-        {%- header "HTTP/1.0 404 Not Found" -%}
-    {%- endif -%}
-{%- endmacro -%}
