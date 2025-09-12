@@ -49,7 +49,7 @@ class Burton extends BurtonThemeBase
             ->where( "isInstalled", true )
             ->one();
 
-        $themePath = array_values( $activeTheme["aliases"] ?? null )[0] ?? null;
+        $themePath = array_values( $activeTheme["aliases"] ?? [] )[0] ?? null;
 
         $this->_siteTemplatePath = [
             '_burton' => array_filter( [
