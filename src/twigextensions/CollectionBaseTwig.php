@@ -44,10 +44,11 @@ class CollectionBaseTwig extends AbstractExtension
         return match (strtolower($type)) {
             'collectionfeed'    => $this->collectionFeed(array_merge([ 'feedUrl' => $collection->feedUrl ?? null ], $params)),
             'collectionquery'   => $this->collectionQuery(array_merge($collection->query->settings ?? [], $params)),
-            'collectionbits'    => $this->collectionBits($collection),
+            'collectionbits'    => $this->collectionBits($collection, ),
             'collectionmedia'   => $this->collectionMedia($collection),
             'collectionimages'  => $this->collectionImages($collection),
             'collectionentries' => $this->collectionEntries($collection, $params),
+
             default => throw new \InvalidArgumentException("Unknown Collection EntryType: {$type}"),
         };
     }
@@ -204,18 +205,18 @@ class CollectionBaseTwig extends AbstractExtension
             $fields = [$fields];
         }
 
-        if( count($fields) === 1 && isset($entry->{$fields[0]}) ) {
-            return $entry->{$fields[0]};
-        } else {
+        // if( count($fields) === 1 && isset($entry->{$fields[0]}) ) {
+        //     return $entry->{$fields[0]};
+        // } else {
             $results = collect();
             foreach ($fields as $field) {
-                if (isset($entry->{$field}) && method_exists($entry->{$field}, 'all')) {
-                $results = $results->merge($entry->{$field}->all());
+                if( isset($entry->{$field}) && method_exists($entry->{$field}, 'all') ) {
+                    $results = $results->merge( $entry->{$field}->all() );
                 }
             }
 
             return $results;
-        }
+        //}
 
     }
 }

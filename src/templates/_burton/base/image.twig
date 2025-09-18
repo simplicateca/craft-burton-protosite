@@ -66,7 +66,6 @@
 {%- endmacro -%}
 
 
-
 {## Widescreen / Video Aspect Frame (with Transform)
 {-------------------------------------------------------------------------------------##}
 {%- macro image__widescreen( images ) -%}
@@ -77,7 +76,7 @@
             height: 540,
             position: 'center-center'
         },
-        figureclass: "relative z-20 w-full bg-theme-tint flex items-center justify-center aspect-video overflow-hidden",
+        figureclass: "relative z-20 w-full bg-theme-surface flex items-center justify-center aspect-video overflow-hidden",
         imgclass: "h-full object-contain"
     } | merge( varargs, true) -%}
 
@@ -90,7 +89,7 @@
 {%- macro image__caption( images, settings ) -%}
     {{ _self.default( images, {
         caption: true,
-        captionclass: "py-3 border-b-4 border-theme-tint",
+        captionclass: "py-3 border-b-4 border-theme-surface",
     } | merge( settings ?? {} ) ) }}
 {%- endmacro -%}
 

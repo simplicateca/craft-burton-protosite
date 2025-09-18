@@ -39,7 +39,11 @@
 {%- block oembed -%}
     {%- set oembed = MediaBase( element.website.url ) -%}
     {{- oembed.code ?? null ? oembed.code | retconAttr( 'iframe', {
-        class : ["source__#{oembed.provider ?? 'unknown'} w-full", oembed.ratio ?? null == 56.5 ? "aspect-video" ],
+        class : [
+            "source__#{oembed.provider ?? 'unknown'} w-full",
+            oembed.ratio ?? null == 56.5 ? "aspect-video",
+            oembed.ratio ?? null > 150 ? "aspect-short" : "",
+        ],
         height: false,
         width : false,
     } ) -}}

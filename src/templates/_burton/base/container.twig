@@ -18,15 +18,30 @@
 {## Container
 {---------------------------------------------------------------------------##}
 {%- macro container( content = null, container = null ) -%}
-    {%- set prefix = "container" -%}
-    {%- set container = container is string ? container : 'none' -%}
-    {%- set path = varargs.template ?? _self -%}
-    {%- set defs = ( block( "defs", path ) | jsonc_decode ) -%}
+    {%- set params = {
+        attr : {
+            data: { container: container ?? null }
+        },
+        container: container ?? "container",
+        template  : varargs.template ?? _self,
+    } | merge( varargs, true ) -%}
 
-    {%- set params = { content: content, attr: { data: { container: container } } } -%}
-    {%- set params = params | merge( defs["#{prefix}_#{container}"] ?? defs[prefix] ?? {}, true) -%}
-    {%- set params = params | merge( varargs, true ) -%}
-    {{- content ? include( path, params, withContext = false ) -}}
+    {%- set defs = ( block( "defs", params.template ) | jsonc_decode ) -%}
+
+    {%- for option in params.container is iterable ? params.container : [params.container] -%}
+        {%- if not match ?? null -%}
+            {%- set option = option is string ? option|replace({ "container_" : "" }) -%}
+            {%- set match  = defs["container_#{option}"] ?? defs[option] ?? null -%}
+            {%- set params = match ? match | merge(params, true) : params -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {%- set content = include( params.template, { content: content, ...params }, withContext = false ) -%}
+    {%- if params.parent ?? null -%}
+        {{ _self.container( content, params.parent, template: params.template ) }}
+    {%- else -%}
+        {{ content }}
+    {%- endif -%}
 {%- endmacro -%}
 
 

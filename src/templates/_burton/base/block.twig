@@ -33,6 +33,12 @@
             'x-data': "{ open: false }",
         }) -%}
 
+        {%- if settings.containersuffix ?? 'none' != 'none' -%}
+            {%- set settings = settings | merge({
+                container: ["#{settings.container}-#{settings.containersuffix}", settings.container ]
+            }, true ) -%}
+        {%- endif -%}
+
         {%- import "_burton" as b -%}
         {{- b.container( blockContent, settings.container ?? 'none' ) -}}
     {%- endif -%}
@@ -111,8 +117,8 @@
     {% switch block.source ?? null %}
         {% case "collection" %}
             {%- set select = settings.filter ?? request.getParam('f') ?? null -%}
-            {%- set avail  = collect( block.collections ?? settings.collections ?? [] ) -%}
-            {%- set bits = collection( avail.firstWhere( 'slug', select ) ?? avail.first() ) -%}
+            {%- set avail  = collect( block.collection ?? settings.collection ?? [] ) -%}
+            {%- set bits   = collection( avail.firstWhere( 'slug', select ) ?? avail.first() ) -%}
         {% default %}
             {%- set bits = collect( block.bits ?? settings.bits ?? [] ) -%}
             {%- set bits = craft.entries()
@@ -139,6 +145,7 @@
 
     {%- import "_burton" as b -%}
     {{- bits ? b.layout( bits, ...settings ) -}}
+
 {%- endblock -%}
 
 

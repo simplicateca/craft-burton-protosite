@@ -83,21 +83,15 @@
     definitions listed below that are responsible for styling various parts of the
     collapser.
 {-------------------------------------------------------------------------------------##}
-{% block collapser__class   "w-full max-w-5xl space-y-4" -%}
-
-{% block panel__titleclass  "h4 mb-0 text-left" -%}
+{% block collapser__class   "w-full max-w-5xl flex flex-col grid-gap" -%}
 {% block panel__titletag    "div" -%}
-{% block panel__buttonclass "flex p-6 pb-0 w-full h-full items-center justify-between" -%}
 
-{% block panel__openclass   "shadow bg-theme-tint2 transition" -%}
-{% block panel__textclass   "p-6" -%}
-
-{% block icon__close svg( '@svgroot/minus.svg') | attr({
-    class: 'fill-current h-10 w-10'
+{% block icon__close svg( '@appicons/minus.svg') | attr({
+    class: 'fill-current h-8 w-8'
 }) -%}
 
-{% block icon__open svg( '@svgroot/plus.svg') | attr({
-    class: 'fill-current h-10 w-10'
+{% block icon__open svg( '@appicons/plus.svg') | attr({
+    class: 'fill-current h-8 w-8'
 }) -%}
 {##-----------------------------------------------------------------------------------##}
 
@@ -160,7 +154,7 @@
 
 {%- block panel__title -%}
     {%- set title = item | retconOnly( 'template[data-title]' ) | retconChange( 'template', false ) -%}
-    {{ title ?? null }}
+    {{- (title ?? '' ) | attr({ class: "" }) -}}
 {%- endblock -%}
 
 {% block panel -%}
@@ -171,24 +165,25 @@
             id: '{{loop.index}}',
             opening: false
         }"
-        :class="isopen(id) ? '{{ block( 'panel__openclass' ) }}' : ''"
+        class="shadow transition bg-theme-surface"
+        :class="isopen(id) ? 'bg-theme-surface-2'"
         role="region"
     >
         <div
-            id="header__{{loop.index}}"
+            id="c{{loop.index}}"
             x-intersect:leave="handleleave(id)"
             class="h-full mb-0 -scroll-mt-4"
-        >{{
-            tag( 'button', {
-                html : block( 'button' ),
-                class: block( 'panel__buttonclass' ),
-                'x-on:click'   : "toggle(id)",
-                'aria-expanded': "isopen(id)",
-            } )
-        }}</div>
+        >
+            <button
+                class="flex p-5 w-full h-full items-center justify-between"
+                :class="isopen(id) ? 'bg-theme-accent/20' : 'bg-theme-link/10'"
+                x-on:click="toggle(id)"
+                aria-expanded="isopen(id)"
+            >{{ block('button') }}</button>
+        </div>
 
         <div x-show="isopen(id)" x-collapse.duration.100ms>
-            <div class="{{ block( 'panel__textclass' ) }}">{{ block('panel__content') }}</div>
+            <div class="p-5">{{ block('panel__content') }}</div>
         </div>
     </div>
 {%- endblock %}
@@ -197,12 +192,12 @@
     {%- set titletag = titletag ?? null is iterable ? titletag : {} %}
     {%- set titletag = titletag is string ? { html: titletag } : titletag %}
     {%- set titletag = {
-        class : settings.panel__titleclass ?? block('panel__titleclass') ?? "",
+        class : "h5 !mb-0 text-left w-full",
         html  : block('panel__title')
     } | merge( titletag ) -%}
 
     {{ tag( block('panel__titletag'), titletag ) }}
 
-    <span x-show="isopen(id)"  aria-hidden="true" class="ml-4">{{ block( 'icon__close' ) }}</span>
-    <span x-show="!isopen(id)" aria-hidden="true" class="ml-4">{{ block( 'icon__open'  ) }}</span>
+    <span x-show="isopen(id)"  aria-hidden="true" class="ml-4 w-2 h-2">{{ block( 'icon__close' ) }}</span>
+    <span x-show="!isopen(id)" aria-hidden="true" class="ml-4 w-2 h-2">{{ block( 'icon__open'  ) }}</span>
 {%- endblock %}
