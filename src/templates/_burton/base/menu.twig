@@ -75,6 +75,9 @@
     {%- set tmpl = varargs.template ?? _self -%}
     {%- set defs = ( block( "defs", tmpl ) | jsonc_decode ) -%}
 
+    {%- set menu = defs["menu"] ?? {} -%}
+    {%- set menu = menu|merge( defs["#{prefix}_#{choice}"] ?? {} ) -%}
+
     {%- set params = { nav: {
         attr: {
             id: "menu_#{choice}",

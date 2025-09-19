@@ -35,8 +35,7 @@
   ➜ make craft "resave/entries"
 {---------------------------------------------------------------------------##}
 {%- macro uri_format( object ) -%}{%- apply spaceless -%}
-    {# {%- set types = object.type.handle | default('') | pluralize | slugify -%} #}
-    {%- set owner = object.primaryOwner.uri|default(null) -%}
+    {%- set owner = object.parent.uri|default(null) -%}
     {%- set slug  = object.slug ?? object.id ?? null -%}
     {{- [owner, slug ] | filter | join('/') -}}
 {%- endapply -%}{%- endmacro -%}

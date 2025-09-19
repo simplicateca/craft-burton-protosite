@@ -119,6 +119,11 @@
             {%- set select = settings.filter ?? request.getParam('f') ?? null -%}
             {%- set avail  = collect( block.collection ?? settings.collection ?? [] ) -%}
             {%- set bits   = collection( avail.firstWhere( 'slug', select ) ?? avail.first() ) -%}
+
+            {%- if settings.topicFilter ?? null -%}
+                {%- set newbits = bits.filter( b => b.topics.ids()|intersect(settings.topicFilter)|length ) -%}
+                {%- set bits = collect( newbits.values() ).all() -%}
+            {%- endif -%}
         {% default %}
             {%- set bits = collect( block.bits ?? settings.bits ?? [] ) -%}
             {%- set bits = craft.entries()
@@ -126,7 +131,7 @@
                 .fixedOrder( settings.orderBy ?? null is empty ) -%}
     {% endswitch %}
 
-    {%- if bits and className(bits) != 'Illuminate\\Support\\Collection' -%}
+    {%- if bits ?? null is object and className(bits) != 'Illuminate\\Support\\Collection' -%}
         {%- if settings.topicFilter ?? null is not empty  -%}
             {%- set f = craft.app.request.getQueryParam('f') ?? null -%}
             {%- set bits = f ? bits.relatedTo(f) : bits -%}
@@ -145,7 +150,6 @@
 
     {%- import "_burton" as b -%}
     {{- bits ? b.layout( bits, ...settings ) -}}
-
 {%- endblock -%}
 
 
@@ -230,13 +234,13 @@
 
     {## Look for Auto-Linking
     {---------------------------------------------------------------------------------##}
-    {# {%- set text1    = TextBase(block.text) ??? null %}
-    {%- set autolink = ( text1.action ??? text1.body ) | retconOnly( "a[data-only-link]" ) -%}
-    {%- set autolink = autolink ? autolink|parseAttr : null -%}
-    {%- if autolink.href ??? null -%}
-        {%- set args = args|merge({ autolink: autolink.href }) -%}
-    {%- endif -%} #}
+    {%- set autolink = _self.autolink_extractor( block('zone1'), 'only' ) -%}
+    {%- if autolink is not empty -%}
+        {%- set settings = settings | merge({ href: autolink }) -%}
+    {%- endif -%}
 
+    {## Render Images
+    {---------------------------------------------------------------------------------##}
     {%- import "_burton" as b -%}
     {%- set images = images | map( m => b.image( m, ...settings ) ) -%}
     {{- images ? b.layout( images, ...settings ) -}}
@@ -336,4 +340,34 @@
 {%- macro component__menu( block ) -%}
     {%- import "_burton" as b -%}
     {{- b.menu( block.component.handle, ...varargs ) -}}
+{%- endmacro -%}
+
+
+
+{%- macro autolink_extractor( input_html, type ) -%}
+    {%- set type  = type ?? 'only' -%}
+    {%- set links = input_html | retconOnly("a[href]") -%}
+    {%- set links = links|split('</a>') -%}
+    {%- set hrefs = [] -%}
+
+    {%- for x in links -%}
+        {%- set attrs = x|parseAttr -%}
+        {%- if attrs.href is defined -%}
+            {%- set hrefs = hrefs|merge([attrs.href]) -%}
+        {%- endif -%}
+    {%- endfor -%}
+
+    {%- set hrefs = hrefs|filter(v => v is not empty) -%}
+
+    {%- if hrefs[0] ?? null and type == 'first' -%}
+        {{- hrefs|first|raw -}}
+    {%- endif -%}
+
+    {%- if hrefs[0] ?? null and type == 'last' -%}
+        {{- hrefs|last|raw -}}
+    {%- endif -%}
+
+    {%- if hrefs[0] ?? null and type == 'only' and hrefs|length == 1 -%}
+        {{- hrefs|first|raw -}}
+    {%- endif -%}
 {%- endmacro -%}

@@ -25,7 +25,24 @@
     transform: transform ??? null,
 } ) -%}
 
-{%- block action _self.action( click ??? null, images ) -%}
+{%- block action -%}
+    {%- switch click ?? 'none' -%}
+        {%- case 'lightbox' -%}
+            {{- _self.action__lightbox( images ) -}}
+
+        {%- case 'download' -%}
+            {{- _self.action__download( images ) -}}
+
+        {%- case 'none' -%}
+
+        {%- default -%}
+            {{- href ?? null ? tag( 'a', {
+                href : href,
+                class: 'click-cover',
+                html : "<span class='sr-only'></span>",
+            } ) -}}
+    {%- endswitch -%}
+{%- endblock -%}
 
 
 {## Render HTML
@@ -122,6 +139,7 @@
 {%- endmacro %}
 
 
+
 {## Caption Output
 {-------------------------------------------------------------------------------------##}
 {%- macro captionText( caption, images ) -%}
@@ -133,37 +151,13 @@
 {%- endmacro -%}
 
 
-{## Image Action
+
+{## Click Action: Download Image
 {---------------------------------------------------------------------------------------}
-    Generates the action for an image (lightbox, download, etc).
+    Creates a download link that points directly to the image file.
 {-------------------------------------------------------------------------------------##}
-{%- macro action( action, images ) -%}
-    {# {%- switch action ?? 'none' -%}
-        {%- case 'lightbox' -%}
-            {{- _self.action__lightbox( images, settings ) -}}
-        {%- case 'download' -%}
-            {{- _self.action__download( images, settings ) -}}
-        {%- case 'none' -%}
-
-        {%- default -%}
-            {{- _self.action__autolink( images, settings ) -}}
-    {%- endswitch -%} #}
-{%- endmacro -%}
-
-
-{# {%- macro action__autolink( image, settings ) -%}
-    {%- if settings.autolink ??? null -%}
-        {{ tag( 'a', {
-            href : settings.autolink,
-            class: 'click-cover',
-            html : "<span class='sr-only'></span>",
-        } ) }}
-    {%- endif -%}
-{%- endmacro %}
-
-
-{%- macro action__download( image, settings ) -%}
-    {%- if image.url ??? null -%}
+{%- macro action__download( image ) -%}
+    {%- if image.url ?? null -%}
         {{ tag( 'a', {
             href : image.url,
             download: image.filename,
@@ -172,23 +166,20 @@
             html : "<span class='sr-only'>Download #{image.alt ?? 'Image'}</span>",
         } ) }}
     {%- endif -%}
-{%- endmacro %} #}
+{%- endmacro %}
 
 
 
-{## Lightbox Modal
+{## Click Action: Lightbox
 {---------------------------------------------------------------------------------------}
-    Creates a modal window that will load on-click to show a larger version of the image.
+    Opens the image in a modal / lightbox for closer viewing.
 {-------------------------------------------------------------------------------------##}
-{# {%- macro action__lightbox( image, settings ) -%}
-    {%- set image = image ??? null -%}
-    {%- set settings = settings ?? null is iterable ? settings : {} -%}
-
-    {%- set lightbox = settings.lightbox ??? ["_burton/local/modal", "_burton/theme/modal", "_burton/base/modal"] -%}
-    {%- set content  = _self.imgtag( image, { imgclass: 'w-auto max-h-[70vh] mx-auto' } ) -%}
-
-    {{ include( lightbox, { content: content, settings: settings }, with_context = false ) }}
-{%- endmacro %} #}
+{%- macro action__lightbox( image ) -%}
+    {%- if image.url ?? null -%}
+        {%- set content = _self.imgtag( image, { imgclass: 'w-auto max-h-[70vh] mx-auto' } ) -%}
+        {{ include( ["_burton/local/modal", "_burton/theme/modal", "_burton/base/modal"], { content: content }, with_context = false ) }}
+    {%- endif -%}
+{%- endmacro %}
 
 
 

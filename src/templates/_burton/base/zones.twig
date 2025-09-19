@@ -266,7 +266,7 @@
 
     // - Vertical Alignment : Center
     "zone_colsrev-50|50": {
-        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row-reverse", "items-stretch", "zone-gap"], "data-attach": "right" } },
+        "zones": { "attr": { "class": ["w-full flex flex-col @3xl:flex-row-reverse", "items-stretch", "zone-gap"], "data-attach": "right" } },
         "zone1": { "attr": { "class": ["@3xl:w-1/2 py-5 @4xl:pl-5 self-center"], "data-zone": 1 } },
         "zone2": { "attr": { "class": ["@3xl:w-1/2 @4xl:pr-5"], "data-zone": 2 } }
     },
@@ -277,14 +277,14 @@
     // - Column Distribution: Zone 1 Wide (60/40)
     // - Responsive Collapse: Full Width (Top/Bottom)
     "zone_cols-66|33-top": {
-        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row", "zone-gap"], "data-attach": "left" } },
+        "zones": { "attr": { "class": ["w-full flex flex-col @3xl:flex-row", "zone-gap"], "data-attach": "left" } },
         "zone1": { "attr": { "class": ["@3xl:w-3/5 @4xl:pr-5"], "data-zone": 1 } },
         "zone2": { "attr": { "class": ["@3xl:w-2/5 @4xl:pl-5"], "data-zone": 2 } }
     },
 
     // - Vertical Alignment : Center
     "zone_cols-66|33": {
-        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row", "items-stretch", "zone-gap"], "data-attach": "left" } },
+        "zones": { "attr": { "class": ["w-full flex flex-col @3xl:flex-row", "items-stretch", "zone-gap"], "data-attach": "left" } },
         "zone1": { "attr": { "class": ["@3xl:w-3/5 py-5 @4xl:pr-5", "self-center"], "data-zone": 1 } },
         "zone2": { "attr": { "class": ["@3xl:w-2/5 @4xl:pl-5"], "data-zone": 2 } }
     },
@@ -295,14 +295,14 @@
     // - Column Distribution: Zone 1 Narrow (40/60)
     // - Responsive Collapse: Full Width (Top/Bottom)
     "zone_cols-33|66-top": {
-        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row", "zone-gap"], "data-attach": "left" } },
+        "zones": { "attr": { "class": ["w-full flex flex-col @3xl:flex-row", "zone-gap"], "data-attach": "left" } },
         "zone1": { "attr": { "class": ["@3xl:w-2/5 @4xl:pr-5"], "data-zone": 1 } },
         "zone2": { "attr": { "class": ["@3xl:w-3/5 @4xl:pl-5"], "data-zone": 2 } }
     },
 
     // - Vertical Alignment : Center
     "zone_cols-33|66": {
-        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row", "items-stretch", "zone-gap"], "data-attach": "left" } },
+        "zones": { "attr": { "class": ["w-full flex flex-col @3xl:flex-row", "items-stretch", "zone-gap"], "data-attach": "left" } },
         "zone1": { "attr": { "class": ["@3xl:w-2/5 py-5 @4xl:pr-5", "self-center"], "data-zone": 1 } },
         "zone2": { "attr": { "class": ["@3xl:w-3/5 @4xl:pl-5"], "data-zone": 2 } }
     },
@@ -313,14 +313,14 @@
     // - Column Distribution: Zone 1 Wide (40/60)
     // - Responsive Collapse: Full Width (Top/Bottom)
     "zone_colsrev-33|66-top": {
-        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row-reverse", "zone-gap"], "data-attach": "right" } },
+        "zones": { "attr": { "class": ["w-full flex flex-col @3xl:flex-row-reverse zone-gap"], "data-attach": "right" } },
         "zone1": { "attr": { "class": ["@3xl:w-3/5 @4xl:pl-5"], "data-zone": 1 } },
         "zone2": { "attr": { "class": ["@3xl:w-2/5 @4xl:pr-5"], "data-zone": 2 } }
     },
 
     // - Vertical Alignment : Center
     "zone_colsrev-33|66": {
-        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row-reverse", "items-stretch", "zone-gap"], "data-attach": "right" } },
+        "zones": { "attr": { "class": ["w-full flex flex-col @3xl:flex-row-reverse", "items-stretch", "zone-gap"], "data-attach": "right" } },
         "zone1": { "attr": { "class": ["@3xl:w-3/5 py-5 @4xl:pl-5", "self-center"], "data-zone": 1 } },
         "zone2": { "attr": { "class": ["@3xl:w-2/5 @4xl:pr-5"], "data-zone": 2 } }
     },
@@ -331,14 +331,25 @@
     // - Column Distribution: Zone 1 Narrow (60/40)
     // - Responsive Collapse: Full Width (Top/Bottom)
     "zone_colsrev-66|33-top": {
-        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row-reverse", "zone-gap"], "data-attach": "right" } },
+        "zones": { "attr": { "class": ["w-full flex flex-col @3xl:flex-row-reverse zone-gap"], "data-attach": "right" } },
         "zone1": { "attr": { "class": ["@3xl:w-2/5 @4xl:pl-5"], "data-zone": 1 } },
+        "zone2": { "attr": { "class": ["@3xl:w-3/5 @4xl:pr-5"], "data-zone": 2 } }
+    },
+
+    // RightNarrow (Horizontal Two Zone Layout)
+    // - Zone 1 (Copy/Text) : Right
+    // - Vertical Alignment : Top
+    // - Column Distribution: Zone 1 Narrow (60/40)
+    // - Responsive Collapse: Full Width (Top/Bottom)
+    "zone_colsrev-66|33-sticky": {
+        "zones": { "attr": { "class": ["w-full flex flex-col @3xl:flex-row-reverse zone-gap"], "data-attach": "right" } },
+        "zone1": { "attr": { "class": ["@3xl:w-2/5 h-full @4xl:pl-5 sticky top-10"], "data-zone": 1 } },
         "zone2": { "attr": { "class": ["@3xl:w-3/5 @4xl:pr-5"], "data-zone": 2 } }
     },
 
     // - Vertical Alignment : Center
     "zone_colsrev-66|33": {
-        "zones": { "attr": { "class": ["w-full", "flex", "flex-col", "@3xl:flex-row-reverse", "items-stretch", "zone-gap"], "data-attach": "right" } },
+        "zones": { "attr": { "class": ["w-full flex flex-col @3xl:flex-row-reverse", "items-stretch", "zone-gap"], "data-attach": "right" } },
         "zone1": { "attr": { "class": ["@3xl:w-2/5 py-5 @4xl:pl-5", "self-center"], "data-zone": 1 } },
         "zone2": { "attr": { "class": ["@3xl:w-3/5 @4xl:pr-5"], "data-zone": 2 } }
     },

@@ -6,15 +6,26 @@
 {%- block output -%}
     {%- if element is defined -%}
         {%- set content = CardBase(element) -%}
-        {%- set html = [ block('figure'), block('details') ] | join('') -%}
-        {{- _self.tagOrRaw( html, tag ?? null, {
-            class: ["w-full relative @container"],
+        {{- _self.tagOrRaw( block('default'), tag ?? null, {
+            class: ["w-full relative @container group"],
         } | merge( attr ?? {}, true ) ) -}}
     {%- endif -%}
 {%- endblock -%}
 
 
 {##-----------------------------------------------------------------------------------##}
+{%- block default -%}
+    {{- block('card') -}}
+    {{- block('meta') -}}
+{%- endblock -%}
+
+{%- block card -%}
+    {{- block('figure')   -}}
+    {{- block('headline') -}}
+    {{- block('summary')  -}}
+    {{- block('action')   -}}
+{%- endblock -%}
+
 {%- block figure -%}
     {%- block image -%}
         {%- set image = content.images ??? images ??? image ??? null -%}
@@ -25,11 +36,20 @@
 {%- endblock -%}
 
 
-{%- block details -%}
-    {{- block('text') -}}
-    {{- block('action') -}}
+{%- block headline -%}
+    {%- set headline = ( headline ?? content.headline ?? '' ) | trim -%}
+    {{- headline is not empty ? tag( 'div', {
+        class: ['h4'],
+        html: headline,
+    } ) -}}
+{%- endblock -%}
 
-    {{- block('meta') -}}
+{%- block summary -%}
+    {%- set summary = ( summary ?? content.summary ?? '' ) | trim -%}
+    {{- summary is not empty ? tag( 'p', {
+        class: [''],
+        html: summary | retconChange( 'p', false ),
+    } ) -}}
 {%- endblock -%}
 
 
@@ -38,37 +58,6 @@
     {%- if title is not empty -%}
         <template data-title="card"><span>{{title}}</span></template>
     {%- endif -%}
-{%- endblock -%}
-
-
-{%- block text -%}
-    {%- set text = {
-        headline: {
-            tag: 'div',
-            attr: {
-                html: headline ?? content.headline ?? null,
-                class: ['h4']
-            }
-        },
-        summary:{
-            tag: 'p',
-            attr: {
-                html: ( summary ?? content.summary ?? null ) | retconChange( 'p', false ),
-            }
-        },
-    } | merge( text ?? {}, true ) -%}
-
-    {%- block headline -%}
-        {{- text.headline.attr.html ? text.headline.tag
-            ? tag( text.headline.tag, text.headline.attr )
-            : text.headline.attr.html -}}
-    {%- endblock -%}
-
-    {%- block summary -%}
-        {{- text.summary.attr.html ? text.summary.tag
-            ? tag( text.summary.tag, text.summary.attr )
-            : text.summary.attr.html -}}
-    {%- endblock -%}
 {%- endblock -%}
 
 
