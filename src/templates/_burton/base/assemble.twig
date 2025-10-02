@@ -31,8 +31,8 @@
     {%- set entry = varargs.entry ?? data -%}
     {%- set type  = entry.type.handle ?? entry.type ?? varargs.type ?? null -%}
     {%- set path = [
-     type ? "_burton/local/#{type}",
-     type ? "_burton/theme/#{type}",
+     type ? "_burton/local/entry/#{type}",
+     type ? "_burton/theme/entry/#{type}",
             "_burton/local/card",
             "_burton/theme/card",
             "_burton/base/card"
@@ -115,7 +115,7 @@
         args: { layout: name } | merge( varargs, true ),
     } -%}
 
-    {{- data ? _self.assemble( ...params ) -}}
+    {{- _self.assemble( ...params ) -}}
 {%- endmacro -%}
 
 
@@ -162,12 +162,14 @@
 
 
 {%- macro search( data = null, name = null ) -%}
+    {%- set name = name ?? varargs.interface ?? null -%}
     {%- set params = {
         path: ["_burton/local/search", "_burton/theme/search", "_burton/base/search"],
         name: name ? name : "search",
         data: data,
         args: { interface: name } | merge( varargs, true ),
     } -%}
+
     {{- _self.assemble( ...params ) -}}
 {%- endmacro -%}
 

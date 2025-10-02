@@ -31,7 +31,7 @@
             {{- _self.action__lightbox( images ) -}}
 
         {%- case 'download' -%}
-            {{- _self.action__download( images ) -}}
+            {{- _self.action__download( images, settings ) -}}
 
         {%- case 'none' -%}
 
@@ -93,8 +93,8 @@
             height: 540,
             position: 'center-center'
         },
-        figureclass: "relative z-20 w-full bg-theme-surface flex items-center justify-center aspect-video overflow-hidden",
-        imgclass: "h-full object-contain"
+        figureclass: "relative z-20 w-full bg-theme-surface aspect-video overflow-hidden",
+        imgclass: "object-cover"
     } | merge( varargs, true) -%}
 
     {{- _self.image( images, ...params ) -}}

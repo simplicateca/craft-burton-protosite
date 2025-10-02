@@ -70,8 +70,12 @@
                 setWidth() { this.width = window.innerWidth > 0 ? window.innerWidth : screen.width }
             }"
 
-            x-on:openmodal.window="open = ( id == event.detail.uuid ) ? true : false"
-            x-on:closemodals.window="open = ( id == event.detail.except ?? null ) ? true : false"
+            x-on:openmodal.window="
+                open = ( id == event.detail.uuid ) ? true : false;
+                console.log( 'x-on:openmodal.window: ' + event.detail.uuid )"
+            x-on:closemodals.window="
+                open = ( id == event.detail.except ?? null ) ? true : false;
+                console.log( 'x-on:closemodals.window: ' + event.detail.except )"
 
             x-init="$watch('open', function(value) {
                 if( value ) { $dispatch( 'closemodals', { except: '{{uuid}}' } ) }

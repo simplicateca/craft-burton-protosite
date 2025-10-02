@@ -85,11 +85,12 @@
 {## Basic Pagination ##}
 {%- macro pagination( pageinfo = null ) -%}
 
-    {% set currentPage = pageinfo.currentPage %}
-    {% set totalPages = pageinfo.totalPages %}
-    {% set prevUrl = pageinfo.prevUrl %}
-    {% set nextUrl = pageinfo.nextUrl %}
-    {% set queryParams = craft.app.request.queryParams|withoutKey('page') %}
+    {%- set currentPage = pageinfo.currentPage -%}
+    {%- set totalPages = pageinfo.totalPages -%}
+    {%- set prevUrl = pageinfo.prevUrl -%}
+    {%- set nextUrl = pageinfo.nextUrl -%}
+    {%- set queryParams = craft.app.request.queryParams|withoutKey('page') -%}
+    {%- set htmx = varargs.htmx ?? {} -%}
 
     {%- if pageinfo.totalPages > 1 -%}
         <nav
@@ -101,16 +102,19 @@
                 class: "pagination-list flex items-center gap-2"
             } -%}
 
+
+
                 <li class="list-none">
-                    {{ tag(prevUrl ? 'a' : 'span', {
+                    {%- set phtmx = prevUrl ? htmx : {} -%}
+                    {{ tag(prevUrl ? 'a' : 'span', phtmx|merge({
                         class: prevUrl
                             ? 'pagination-prev px-3 py-1 border rounded hover:bg-gray-200'
                             : 'pagination-prev disabled px-3 py-1 border rounded text-gray-400 cursor-not-allowed',
                         href: prevUrl ? prevUrl ~ '?' ~ queryParams|url_encode : null,
-                        'hx-get': prevUrl ? prevUrl ~ '?' ~ queryParams|url_encode,
+                        'hx-get': prevUrl ? prevUrl ~ '?' ~ queryParams|url_encode : null,
                         'aria-label': prevUrl ? 'Previous page' : null,
                         html: "‹&nbsp;Prev"
-                    }) }}
+                    } | filter ) ) }}
                 </li>
 
                 {# Calculate rolling window bounds #}
@@ -139,7 +143,7 @@
                             : url(craft.app.request.pathInfo ~ '/p' ~ page) ~ '?' ~ queryParams|url_encode
                         ) -%}
 
-                        {{ tag(page == currentPage ? 'span' : 'a', {
+                        {{ tag(page == currentPage ? 'span' : 'a', htmx|merge({
                             class: page == currentPage
                                 ? 'pagination-current px-3 py-1 border rounded bg-gray-300 font-semibold'
                                 : 'pagination-page px-3 py-1 border rounded hover:bg-gray-200',
@@ -147,21 +151,22 @@
                             'hx-get': href,
                             'aria-label': page == currentPage ? null : 'Go to page ' ~ page,
                             text: page
-                        }) }}
+                        } | filter ) ) }}
                     </li>
                 {% endfor %}
 
                 {# Next Page Link #}
                 <li class="list-none">
-                    {{ tag(nextUrl ? 'a' : 'span', {
+                    {%- set nhtmx = nextUrl ? htmx : {} -%}
+                    {{ tag(nextUrl ? 'a' : 'span', nhtmx|merge({
                         class: nextUrl
                             ? 'pagination-next px-3 py-1 border rounded hover:bg-gray-200'
                             : 'pagination-next disabled px-3 py-1 border rounded text-gray-400 cursor-not-allowed',
                         href: nextUrl ? nextUrl ~ '?' ~ queryParams|url_encode : null,
-                        'hx-get': nextUrl ? nextUrl ~ '?' ~ queryParams|url_encode,
+                        'hx-get': nextUrl ? nextUrl ~ '?' ~ queryParams|url_encode : null,
                         'aria-label': nextUrl ? 'Next page' : null,
                         html: "Next&nbsp;›"
-                    }) }}
+                    } | filter ) ) }}
                 </li>
             {%- endtag -%}
         </nav>

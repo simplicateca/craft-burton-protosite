@@ -163,18 +163,16 @@
 
 
 {%- macro copyToClipboard() -%}
-    <script>
-        function copyToClipboard(textToCopy) {
-            const temp = document.createElement("input")
-                temp.type = "text"
-                temp.value = textToCopy
+    function copyToClipboard(textToCopy) {
+        const temp = document.createElement("input")
+            temp.type = "text"
+            temp.value = textToCopy
 
-            document.body.appendChild(temp)
-            temp.select()
-            document.execCommand("Copy")
-            document.body.removeChild(temp)
+        document.body.appendChild(temp)
+        temp.select()
+        document.execCommand("Copy")
+        document.body.removeChild(temp)
 
-            alert( "Copied to clipboard")
-        }
-    </script>
+        alert( "Copied to clipboard")
+    }
 {%- endmacro -%}

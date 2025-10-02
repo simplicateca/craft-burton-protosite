@@ -20,11 +20,11 @@
         }, true ) -%}
     {%- endif -%}
 
-    {%- set blockContent = block('blockContent') | trim -%}
+    {%- set blockContent = block('blockContent', _path ?? _self) | trim -%}
 
     {%- if blockContent is not empty -%}
         {%- if loops.block.index ?? null > 1 -%}
-            {{- block( 'beforeContent' ) -}}
+            {{- block( 'beforeContent', _path ?? _self ) -}}
         {%- endif -%}
 
         {%- set blockContent = _self.tagOrRaw( blockContent, tag ?? null, {
@@ -57,10 +57,10 @@
     {%- else -%}
         {%- import "_burton" as b -%}
         {{- b.zonelayout({
-            zone1 : block('zone1'),
-            zone2 : block('zone2'),
-            header: block('header'),
-            footer: block('footer')
+            zone1 : block('zone1', _path ?? _self),
+            zone2 : block('zone2', _path ?? _self),
+            header: block('header', _path ?? _self),
+            footer: block('footer', _path ?? _self)
         }, ...settings ) -}}
     {%- endif -%}
 {%- endblock -%}
@@ -102,14 +102,14 @@
 {%- block zone2 -%}
     {%- set zone2Type = block.type.handle ?? block.type ?? null -%}
     {{ zone2Type in ["bits", "component", "deck", "image", "media", "text", "fragment"]
-        ? block("zone2__#{zone2Type}")
-        : block("zone2__unknown") -}}
+        ? block("block__#{zone2Type}", _path ?? _self)
+        : block("block__unknown", _path ?? _self) -}}
 {%- endblock -%}
 
 
 {## [Block Type] Bits
 {-------------------------------------------------------------------------------------##}
-{%- block zone2__bits -%}
+{%- block block__bits -%}
     {%- set limit = settings.limit ?? 100 -%}
     {%- set limit = limit == 0 ? -1 : limit -%}
     {%- set bits = [] -%}
@@ -148,14 +148,18 @@
         {%- set bits = collect( bits ).all() -%}
     {%- endif -%}
 
-    {%- import "_burton" as b -%}
-    {{- bits ? b.layout( bits, ...settings ) -}}
+    {%- block bits__layout -%}
+        {%- import "_burton" as b -%}
+        {%- set bits = bits ?? [] -%}
+        {%- set settings = settings ?? {} -%}
+        {{- b.layout( bits, ...settings ) -}}
+    {%- endblock -%}
 {%- endblock -%}
 
 
 {## [Block Type] Component
 {-------------------------------------------------------------------------------------##}
-{%- block zone2__component -%}
+{%- block block__component -%}
     {{- renderMacroIfExists(
         _path ?? ["_burton/local/block", "_burton/theme/block", "_burton/base/block"],
         ["component__#{block.source}", "component__#{block.component.type ??? null}" ],
@@ -167,61 +171,97 @@
 
 {## [Block Type] Deck
 {-------------------------------------------------------------------------------------##}
-{%- block zone2__deck -%}
-    {%- set limit = settings.limit ?? 100 -%}
-    {%- set limit = limit == 0 ? -1 : limit -%}
-    {%- set cards = [] -%}
+{%- block block__deck -%}
 
+    {%- set params = ( settings.queryParams ?? craft.app.request.getQueryParams() ) | filter -%}
     {% switch block.source ?? null %}
         {% case "collection" %}
-            {%- set select = settings.filter ?? request.getParam('f') ?? null -%}
-            {%- set avail  = collect( block.collections ?? settings.collections ?? [] ) -%}
-            {%- set cards = collection( avail.firstWhere( 'slug', select ) ?? avail.first() ) -%}
+            {%- set collections = block.collections ?? settings.collections ?? [] -%}
+            {%- if collections is string or collections is numeric -%}
+                {%- set sources = craft.entries().section("collections") -%}
+                {%- set source = collections is numeric ? sources.id([collections|trim]).one() : sources.slug(collections).one() -%}
+            {%- endif -%}
+
+            {%- if collections is array and collections|join is numeric -%}
+                {%- set source = craft.entries().id(params.c ?? null in sources ? params.c : sources|first).one() -%}
+            {%- endif -%}
+
+            {%- if collections is array and collections|join is string -%}
+                {%- set sources = craft.entries().section("collections").slug(sources) -%}
+                {%- set source = params.c ?? null is numeric ? sources.id(params.c).one() : sources.one() -%}
+            {%- endif -%}
+
+            {%- if collections is array and collections[0] ?? null is object and className(sources[0]) == "craft\\elements\\Entry" -%}
+                {%- set sources = collect(sources).where("section.handle", "collections") -%}
+                {%- set source = params.c ?? null is numeric ? sources.firstWhere('id', params.c) : sources.first() -%}
+            {%- endif -%}
+
+            {% if collections is object and className(collections) == "craft\\elements\\db\\EntryQuery" -%}
+                {%- set source = params.c ?? null is numeric ? collections.id(params.c).one() : collections.one() -%}
+            {%- endif -%}
+
+            {%- set entries = ( source.type.handle ?? null == 'collectionEntries' )
+                ? source.entries ?? []
+                : collection(source) -%}
         {% default %}
-            {%- set cards = collect( block.entries ?? settings.entries ?? [] ) -%}
-            {%- set cards = craft.entries()
-                .id( cards | map( e => e.id ) | filter( id => id is not empty ) )
-                .fixedOrder( settings.orderBy ?? null is empty ) -%}
+            {%- set entries = block.entries ?? settings.entries ?? [] -%}
     {% endswitch %}
 
-    {%- if cards and className(cards) != 'Illuminate\\Support\\Collection' -%}
-        {%- if settings.query ?? null is not empty -%}
-            {%- set q = craft.app.request.getQueryParam('q') ?? null -%}
-            {%- set cards = q ? cards.search(q) : cards -%}
-        {%- endif -%}
+    {%- set limit = settings.limit ?? 100 -%}
+    {%- set orderBy = settings.orderBy ?? source.query.orderBy ?? null -%}
 
-        {%- if settings.topicFilter ?? null is not empty  -%}
-            {%- set f = craft.app.request.getQueryParam('f') ?? null -%}
-            {%- set cards = f ? cards.relatedTo(f) : cards -%}
-        {%- endif -%}
-
-        {%- if settings.orderBy ?? null is not empty -%}
-            {%- set cards = cards.orderBy(settings.orderBy) -%}
-        {%- endif -%}
-
-        {%- if limit > 0 -%}
-            {%- set cards = cards.limit(limit) -%}
-        {%- endif -%}
-
-        {%- if settings.pagination ?? null and settings.pagination != 'null' -%}
-            {%- paginate cards as pageinfo, cards -%}
-            {%- set settings = settings | merge({ pageinfo: pageinfo }) -%}
-        {%- endif -%}
-
-        {%- set cards = collect( cards ).all() -%}
+    {%- if (params.q ?? params.f ?? params.t ?? null) is not empty and entries is array -%}
+        {%- set refind = entries|map(e => e.id)|filter(id => id ?? null )|filter|values -%}
+        {%- set entries = refind|join is numeric ? craft.entries().id(refind).fixedOrder(true) : null -%}
     {%- endif -%}
 
-    {%- import "_burton" as b -%}
-    {{- cards[0] ?? null ? b.layout( cards, ...settings ) -}}
+    {%- if entries is object and className(entries) == "craft\\elements\\db\\EntryQuery" -%}
+        {%- if params.q ?? null is string -%}
+            {%- set entries = entries.search(params.q) -%}{%- endif -%}
+        {%- if params.f ?? null is string -%}
+            {%- set entries = entries.customFilter1(params.f) -%}{%- endif -%}
+        {%- if params.t ?? null is numeric -%}
+            {%- set entries = entries.relatedTo({ targetElement: params.t, field: 'details.topics' }) -%}{%- endif -%}
+        {%- if orderBy is not null -%}
+            {%- set entries = entries.orderBy( orderBy is array ? orderBy|join(' ') : orderBy ) -%}{%- endif -%}
+        {%- if limit > 0 -%}
+            {%- set entries = entries.limit(limit) -%}
+            {%- paginate entries as pageinfo, entries -%}
+            {%- set settings = settings | merge({ pageinfo }) -%}{%- endif -%}
+    {%- endif -%}
+
+    {%- block deck__layout -%}
+        {%- import "_burton" as b -%}
+        {%- set entries  = entries  ?? [] -%}
+        {%- set settings = settings ?? {} -%}
+        {{- b.layout( entries, ...settings ) -}}
+    {%- endblock -%}
+
+    {# {%- if entries is empty -%}
+        <h1>No Entries Found</h1>
+
+    {# {%- else -%}
+        {%- if entries is array -%}
+            {%- set entries = collect(entries) -%}{%- endif -%}
+        {%- endif -%}
+        {%- if entries is object and className(entries) == "Illuminate\\Support\\Collection" -%}{%- endif -%}
+        {%- if settings.orderBy ?? null and entries is object and className(entries) == "Illuminate\\Support\\Collection" -%}
+            {%- set entries = entries.sortBy(settings.orderBy) -%}{%- endif -%}
+        {%- if entries is array and entries|length > limit -%}
+            {%- set entries = entries|slice(0, limit) -%}{%- endif -%}
+        {%- if entries is object and className(entries) == "Illuminate\\Support\\Collection" -%}
+            {%- set entries = entries.count() > limit ? entries.slice(limit).all() : entries.all() -%}{%- endif -%}
+    {%- endif -%} #}
+
 {%- endblock -%}
+
 
 
 {## [Block Type] Image
 {-------------------------------------------------------------------------------------##}
-{%- block zone2__image -%}
-    {%- set limit  = settings.limit ?? 100 -%}
-    {%- set limit  = limit > 0 ? limit : 1 -%}
-    {%- set images = [] -%}
+{%- block block__image -%}
+    {%- set limit = settings.limit ?? 100 -%}
+    {%- set limit = limit > 0 ? limit : 1 -%}
 
     {% switch block.source ?? null %}
         {% case "collection" %}
@@ -234,25 +274,29 @@
 
     {## Look for Auto-Linking
     {---------------------------------------------------------------------------------##}
-    {%- set autolink = _self.autolink_extractor( block('zone1'), 'only' ) -%}
+    {%- set autolink = _self.autolink_extractor( block('zone1', _path ?? _self), 'only' ) -%}
     {%- if autolink is not empty -%}
         {%- set settings = settings | merge({ href: autolink }) -%}
     {%- endif -%}
 
     {## Render Images
     {---------------------------------------------------------------------------------##}
-    {%- import "_burton" as b -%}
     {%- set images = images | map( m => b.image( m, ...settings ) ) -%}
-    {{- images ? b.layout( images, ...settings ) -}}
+
+    {%- block image__layout -%}
+        {%- import "_burton" as b -%}
+        {%- set images = images ?? {} -%}
+        {%- set settings = settings ?? {} -%}
+        {{- b.layout( images, ...settings ) -}}
+    {%- endblock -%}
 {%- endblock -%}
 
 
 {## [Block Type] Media
 {-------------------------------------------------------------------------------------##}
-{%- block zone2__media -%}
+{%- block block__media -%}
     {%- set limit  = settings.limit ?? 100 -%}
     {%- set limit  = limit > 0 ? limit : 1 -%}
-    {%- set medias = [] -%}
 
     {% switch block.source ?? null %}
         {% case "embed" %}
@@ -265,58 +309,62 @@
             {%- set medias = collect( block.medias ?? settings.medias ).slice(0, limit).all() -%}
     {% endswitch %}
 
-    {%- import "_burton" as b -%}
     {%- set medias = medias | map( m => b.media( m, ...settings ) ) -%}
-    {{- b.layout( medias, ...settings ) -}}
+
+    {%- block media__layout -%}
+        {%- import "_burton" as b -%}
+        {%- set medias = medias ?? {} -%}
+        {%- set settings = settings ?? {} -%}
+        {{- b.layout( medias, ...settings ) -}}
+    {%- endblock -%}
 {%- endblock -%}
 
 
 
 {## [Block Type] Text
 {-------------------------------------------------------------------------------------##}
-{%- block zone2__text -%}
-    {{- settings.secondary ?? null != 'copyNone'
-        ? raw( TextBase( block.text2 ?? "" ).body ?? "" ) -}}
+{%- block block__text -%}
+    {%- block text__layout -%}
+        {{- settings.secondary ?? null != 'copyNone'
+            ? raw( TextBase( block.text2 ?? "" ).body ?? "" ) -}}
+    {%- endblock -%}
 {%- endblock -%}
 
 
 {## [Block Type] Fragment
 {-------------------------------------------------------------------------------------##}
-{%- block zone2__fragment -%}
-    {%- if 'interactive' == settings.format ?? null  -%}
-        {%- import "_burton" as b -%}
+{%- block block__fragment -%}
 
-        <div
-            x-cloak
-            x-show="open"
-            x-transition
-            class="relative @container"
-        >
-            {%- for fragment in block.fragments.all() -%}
-                {%- set fContent = b.builder( fragment.builder.all() ?? [], 'fragment' ) -%}
-                {{- fContent
+    {%- import "_burton" as b -%}
+    {%- set fragments = collect( block.fragments ?? [] ) -%}
+    {%- set builders = fragments.map( f => b.builder( f.builder ?? [], 'fragment' ) ) -%}
+
+    {%- block fragment__layout -%}
+        {%- if 'interactive' == settings.format ?? null -%}
+            <div x-cloak x-show="open" x-transition class="relative @container">
+                {{- builders|join()
                     | retconChange( 'section[data-theme]', false )
                     | retconChange( '[data-container]', false ) -}}
+            </div>
+
+            {## Interactive Modal Version
+            {-------------------------------------------------------------------------------##}
+            {# {%- set content = tag('div') -%}
+            {%- for fragment in block.fragments.all() -%}
+                {%- set content = content | append( b.builder( fragment.builder.all() ?? [], 'fragment' ) ) -%}
             {%- endfor -%}
-        </div>
 
-        {## Interactive Modal Version
-        {-------------------------------------------------------------------------------##}
-        {# {%- set content = tag('div') -%}
-        {%- for fragment in block.fragments.all() -%}
-            {%- set content = content | append( b.builder( fragment.builder.all() ?? [], 'fragment' ) ) -%}
-        {%- endfor -%}
-
-        {{- include( ["_burton/local/modal", "_burton/theme/modal", "_burton/base/modal"], {
-            content: raw( content )
-        }, withContext = false ) -}} #}
-    {%- endif -%}
+            {{- include( ["_burton/local/modal", "_burton/theme/modal", "_burton/base/modal"], {
+                content: raw( content )
+            }, withContext = false ) -}} #}
+        {%- endif -%}
+    {%- endblock -%}
 {%- endblock -%}
 
 
 {## [Block Type] Unknown
 {-------------------------------------------------------------------------------------##}
-{%- block zone2__unknown -%}
+{%- block block__unknown -%}
     <h1>Unknown Block</h1>
 {%- endblock -%}
 

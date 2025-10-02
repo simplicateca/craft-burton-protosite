@@ -55,18 +55,21 @@
         id      : "audio#{random()}",
         controls: true,
         preload : true,
-        class   : "aspect-audio w-full",
+        class   : "aspect-audio w-full cursor-pointer",
         html    : block('source')
     } ) -}}
 {%- endblock -%}
 
 
 {% block video -%}
+    <meta itemprop="uploadDate" content="{{ element.dateCreated|date('c') }}">
+    <meta itemprop="thumbnailUrl" content="{{ element.card.images.one().url ?? null }}">
+    <meta itemprop="contentUrl" content="{{ element.url ?? null }}">
     {{- element ? tag( 'video', {
         id      : "video#{random()}",
         controls: true,
         preload : true,
-        class   : "aspect-video w-full",
+        class   : "aspect-video w-full cursor-pointer",
         html    : block('source')
     } ) -}}
 {%- endblock -%}

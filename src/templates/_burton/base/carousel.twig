@@ -17,15 +17,7 @@
 
 
 {## Default Configuration
-{---------------------------------------------------------------------------------------}
 {-------------------------------------------------------------------------------------##}
-{% block class__base  "min-w-[260px] relative z-40 mb-6 lg:mb-0" -%}
-{% block class__track "" -%}
-{% block class__ul    "h-full" -%}
-{% block class__li    "flex flex-col items-center justify-start" -%}
-{% block class__slide block('class__li') -%}{## class__slide is an alias for class_li ##}
-{% block class__pagination "" -%}
-
 {% block splide__json %}
     {%- if "max1" == columns ?? null -%}
         {
@@ -67,12 +59,12 @@
     {## Load Splide CSS from CDN ##}
     {% css "https://cdn.jsdelivr.net/npm/@splidejs/splide@4.1.4/dist/css/splide.min.css" -%}
     {% css %}
-        button.splide__arrow { background: rgb( var(--background-tint) ); }
-        .splide__arrow svg { fill: rgb( var(--body) ); }
+        button.splide__arrow { background: rgba( var(--accent) ); }
+        .splide__arrow svg { fill: rgba( var(---accent-surface) ); }
         .splide__arrow--prev { left : -1rem; }
         .splide__arrow--next { right: -1rem; }
-        .splide__pagination__page { bottom: -4rem; background-color: rgb( var(--surface) ) !important; }
-        .splide__pagination__page.is-active { background-color: rgb( var(--heading) ); }
+        .splide__pagination__page { bottom: -4rem; background-color: rgba( var(--accent) ); }
+        .splide__pagination__page.is-active { background-color: rgba( var(--accent-surface) ); }
     {% endcss %}
 
     <div
@@ -95,19 +87,19 @@
 
         <section
             id="{{uuid}}"
-            class="splide {{ block('class__base') }}"
+            class="splide min-w-[260px] relative z-40 mb-6 lg:mb-0"
             aria-label="{{title}}"
         >
-            <div class="splide__track {{ block('class__track') }}">
-                <ul class="splide__list {{ block('class__ul') }}">
+            <div class="splide__track">
+                <ul class="splide__list h-full">
                     {% for item in items %}
-                        <li class="splide__slide {{ block('class__li') }}">{% block slide item | retconRemove('template') %}</li>
+                        <li class="splide__slide flex flex-col items-center justify-start">{% block slide item | retconRemove('template') %}</li>
                     {% endfor %}
                 </ul>
             </div>
 
             <footer class="relative">
-                <ul class="splide__pagination {{ block('class__pagination') }}"></ul>
+                <ul class="splide__pagination"></ul>
             </footer>
 
             {## Modal <templates> ##}

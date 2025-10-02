@@ -33,6 +33,7 @@
 
         {%- set content -%}
             {%- for blk in chunk -%}
+
                 {%- set bIndex = bIndex + 1 -%}
                 {%- set params = {
                     _path: blk.path,
@@ -129,8 +130,8 @@
 
     {%- if blocks -%}
         {%- set params = {
-            builder  : 'sidebar',
-            container: 'none',
+            builder  : "sidebar",
+            container: "none",
             spacer   : "small",
         } | merge( varargs, true ) -%}
 

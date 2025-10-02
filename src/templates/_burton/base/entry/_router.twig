@@ -3,7 +3,7 @@
 {%- set entry = entry ?? null -%}
 {%- set type = entry.type.handle ?? null -%}
 {%- set section = entry.section.handle ?? null -%}
-{%- set slug = ( entry.uri ?? '' ) | slugify -%}
+{%- set slug = ( entry.slug ?? '' ) | slugify -%}
 
 {%- if type == 'redirect' -%}
     {%- set destination = ( entry.entries.one() ?? {} ).url ?? entry.website ?? null -%}
@@ -13,18 +13,19 @@
         {%- header "HTTP/1.0 404 Not Found" -%}
     {%- endif -%}
 {%- else %}
-    {{- include( [
-        section and slug ? "_burton/local/#{section}.#{slug}",
-        section and slug ? "_burton/theme/#{section}.#{slug}",
-        section and type ? "_burton/local/#{section}.#{type}",
-        section and type ? "_burton/theme/#{section}.#{type}",
-                    type ? "_burton/local/#{type}",
-                    type ? "_burton/theme/#{type}",
-                    type ? "_burton/base/#{type}",
-                        "_burton/local/entry/default",
-                        "_burton/theme/entry/default",
-                        "_burton/base/entry/default",
-    ] | filter, { entry: entry }, withContext: false ) -}}
+    {%- set router = { path: [
+        section and slug ? "_burton/local/#{section}/#{slug}",
+        section and slug ? "_burton/theme/#{section}/#{slug}",
+        section and type ? "_burton/local/#{section}/#{type}",
+        section and type ? "_burton/theme/#{section}/#{type}",
+                    type ? "_burton/local/entry/#{type}",
+                    type ? "_burton/theme/entry/#{type}",
+                           "_burton/local/entry/base",
+                           "_burton/theme/entry/base",
+                           "_burton/base/entry",
+    ] | filter } -%}
+
+    {{- include( router.path, { router, entry }, withContext: false ) -}}
 {%- endif -%}
 
 {## URI Formatting

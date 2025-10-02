@@ -40,8 +40,8 @@
     {% endif %} #}
 
     {{- craft.app.request.isAjax() and not craft.app.request.getIsPreview()
-        ? block('ajax')
-        : block('regular')
+        ? block('ajax', router.path ?? _self)
+        : block('regular', router.path ?? _self)
     -}}
 {%- endblock -%}
 
@@ -54,8 +54,8 @@
     {{ tag( 'html', {
         prefix: "og: http://ogp.me/ns# fb: http://ogp.me/ns/fb#",
         lang  : craft.app.language|slice(0,2),
-        class : block('html__class'),
-        html  : block('html')
+        class : block('html__class', router.path ?? _self),
+        html  : block('html', router.path ?? _self)
     }) -}}
 {%- endblock -%}
 
@@ -64,11 +64,11 @@
 {%- endblock -%}
 
 {%- block html -%}
-    {{- tag('head', { html: block('head') }) -}}
+    {{- tag('head', { html: block('head', router.path ?? _self) }) -}}
     {{- tag('body', {
-        class: block('body__class'),
-        id   : block('body__id'),
-        html : block('body')
+        class: block('body__class', router.path ?? _self),
+        id   : block('body__id', router.path ?? _self),
+        html : block('body', router.path ?? _self)
     } ) -}}
 {%- endblock -%}
 
@@ -95,7 +95,7 @@
 
     {%- block page -%}
         {%- block topline -%}{%- endblock -%}
-        {%- block main tag( 'main', { html: block('content') }) -%}
+        {%- block main tag( 'main', { html: block('content', router.path ?? _self) }) -%}
         {%- block bottomline -%}{%- endblock -%}
     {%- endblock -%}
 
