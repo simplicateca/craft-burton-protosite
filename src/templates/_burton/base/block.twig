@@ -281,6 +281,7 @@
 
     {## Render Images
     {---------------------------------------------------------------------------------##}
+    {%- import "_burton" as b -%}
     {%- set images = images | map( m => b.image( m, ...settings ) ) -%}
 
     {%- block image__layout -%}
