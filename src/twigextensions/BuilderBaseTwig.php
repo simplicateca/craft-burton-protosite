@@ -84,18 +84,16 @@ class BuilderBaseTwig extends AbstractExtension {
 
                 if( $isInline == true ) {
 
-
                     $builder[] = $block;
                     foreach( $block['block']->fragments->all() AS $frag ) {
                         if( $frag->builder ?? null ) {
                             foreach( $frag->builder->all() AS $f ) {
                                 $f->setPrimaryOwner( $block['block']->primaryOwner );
                                 $inline = $this->_settings( [ 'block' => $f, 'settings' => $settings ] );
-
-                                $inline['settings']['theme'] =
-                                    strtolower( $block['settings']['theme'] ?? '' ) == 'fragment'
-                                    ? $inline['settings']['theme']
-                                    : 'inherit';
+                                if( strtolower( $block['settings']['theme'] ?? '' ) != 'fragment' ) {
+                                    $frame = $block['block']->frame->settings ?? [];
+                                    $inline['settings'] = array_merge( $inline['settings'], $frame );
+                                }
 
                                 $builder[] = $inline;
                             }
