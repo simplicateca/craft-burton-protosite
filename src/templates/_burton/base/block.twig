@@ -216,6 +216,8 @@
     {%- endif -%}
 
     {%- if entries is object and className(entries) == "craft\\elements\\db\\EntryQuery" -%}
+        {%- if setting.textFilter ?? null is string -%}
+            {%- set entries = entries.search(setting.textFilter) -%}{%- endif -%}
         {%- if params.q ?? null is string -%}
             {%- set entries = entries.search(params.q) -%}{%- endif -%}
         {%- if params.f ?? null is string -%}
