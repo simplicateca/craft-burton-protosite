@@ -125,6 +125,10 @@ class BuilderBaseTwig extends AbstractExtension {
             } else {
                 $lastTheme = $block['settings']['theme'];
             }
+
+            if( empty($block['settings']['canvas'])  ) {
+                $block['settings']['canvas'] = 'bleed';
+            }
         }
         unset($block); // break reference
 
