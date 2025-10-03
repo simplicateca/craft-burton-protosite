@@ -29,7 +29,7 @@
     {%- set bIndex  = 0 -%}
     {%- set gPrev   = null -%}
     {%- set bPrev   = null -%}
-    {%- for chunk in themeChunks(blocks, 'neutral') -%}
+    {%- for chunk in themeChunks(blocks) -%}
 
         {%- set content -%}
             {%- for blk in chunk -%}

@@ -135,8 +135,8 @@ class BuilderBaseTwig extends AbstractExtension {
                 }
 
                 $lastGroup = $carry->last();
-                $lastTheme = $lastGroup[0]['settings']['theme'];
-                $currentTheme = $item['settings']['theme'];
+                $lastTheme = $lastGroup[0]['settings']['theme'] . $lastGroup[0]['settings']['canvas'] ?? '';
+                $currentTheme = $item['settings']['theme'] . $item['settings']['canvas'] ?? '';
 
                 if ($currentTheme === $lastTheme) {
                     $carry->pop();
