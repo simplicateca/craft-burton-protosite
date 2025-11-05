@@ -16,7 +16,7 @@
     "require": {
         "craftcms/cms": "^5.6.1",
         "craftcms/ckeditor": "^4.10.1",
-        "simplicateca/metasettings": "^5.2.0",
+        "simplicateca/metasettings": "dev-develop",
         "simplicateca/burton-theme-solo": "dev-develop",
         "topshelfcraft/environment-label": "^5.0.0",
         "nystudio107/craft-emptycoalesce": "^5.0.0",
