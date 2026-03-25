@@ -16,14 +16,14 @@
     {%- set collection = craft.entries().section('collections').slug(slug ?? '---').one() -%}
     {%- set type = collection.type.handle ?? null -%}
 
-    {# {%- set query = ( source.query.settings ?? {} ) | merge( {
+    {# {%- set query = ( source.query.settings ) | merge( {
         limit  : limit,
         orderBy: orderBy,
     } | filter, true ) -%} #}
 
     {%- if type == 'collectionQuery' -%}
 
-        {%- set settings = collection.query.settings ?? {} -%}
+        {%- set settings = collection.query.settings -%}
 
         {%- set query = {
             section: settings.section ?? null,

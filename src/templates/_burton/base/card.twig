@@ -6,9 +6,13 @@
 {%- block output -%}
     {%- if element is defined -%}
         {%- set content = CardBase(element) -%}
+        {# {{- _self.tagOrRaw( block('default'), tag ?? null, {
+            class: ["w-full relative @container group"],
+        } | merge( attr ?? {}, true ) ) -}} #}
+
         {{- _self.tagOrRaw( block('default'), tag ?? null, {
             class: ["w-full relative @container group"],
-        } | merge( attr ?? {}, true ) ) -}}
+        } | merge( attr, true ) ) -}}
     {%- endif -%}
 {%- endblock -%}
 
@@ -29,7 +33,8 @@
 {%- block figure -%}
     {%- block image -%}
         {%- set image = content.images ??? images ??? image ??? null -%}
-        {%- set figure = { layer: 'default' } | merge(figure ?? {}, true) -%}
+        {# {%- set figure = { layer: 'default' } | merge(figure ?? {}, true) -%} #}
+        {%- set figure = { layer: 'default' } | merge(figure, true) -%}
         {%- import "_burton" as b -%}
         {{- b.image( image, ...figure ) -}}
     {%- endblock -%}

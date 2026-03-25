@@ -3,15 +3,15 @@
 {%- extends "_burton/base/partial" -%}
 
 {%- block output -%}
-    {{- nav.tag is defined
-        ? tag( nav.tag, { html: block('list'), ...nav.attr ?? {} } )
-        : block('list') -}}
+    {# {{- nav.tag is defined
+        ? tag( nav.tag, { html: block('list'), ...nav.attr } )
+        : block('list') -}} #}
 {%- endblock -%}
 
 
 {%- block list -%}
     {{- list.tag is defined
-        ? tag( list.tag, { html: block('nodes'), ...list.attr ?? {} } )
+        ? tag( list.tag, { html: block('nodes'), ...list.attr } )
         : block('nodes') -}}
 {%- endblock -%}
 
@@ -19,7 +19,7 @@
 {%- block nodes -%}
     {%- set nodes = nodes ?? [] -%}
     {%- for node in nodes -%}
-        {%- block node -%}
+        {# {%- block node -%}
             {%- if [node, 'title'] is callable -%}
                 {%- set isPassive = [node, 'isPassive'] is callable ? node.isPassive : 'false' -%}
                 {{- [node, 'isPassive'] is callable and node.isPassive
@@ -28,6 +28,18 @@
                 -}}
             {%- else -%}
                 {{- tag( link.node.tag ?? list.node.tag ?? 'div', { html: node.html ?? node, ...(list.node.attr ?? {}) | merge(link.node.attr ?? {}, true) } ) -}}
+            {%- endif -%}
+        {%- endblock -%} #}
+
+        {%- block node -%}
+            {%- if [node, 'title'] is callable -%}
+                {%- set isPassive = [node, 'isPassive'] is callable ? node.isPassive : 'false' -%}
+                {{- [node, 'isPassive'] is callable and node.isPassive
+                    ? tag( passive.node.tag ?? list.node.tag ?? 'div', { html: block('passive'), ...(list.node.attr) | merge(passive.node.attr, true) } )
+                    : tag( link.node.tag    ?? list.node.tag ?? 'div', { html: block('link'),    ...(list.node.attr) | merge(link.node.attr   , true) } )
+                -}}
+            {%- else -%}
+                {{- tag( link.node.tag ?? list.node.tag ?? 'div', { html: node.html ?? node, ...(list.node.attr) | merge(link.node.attr, true) } ) -}}
             {%- endif -%}
         {%- endblock -%}
     {%- endfor -%}
@@ -38,13 +50,13 @@
     {%- set node = node ?? null -%}
     {%- set params = {
         class: [node.classes ?? '']
-    } | merge( link.attr ?? {}, true ) -%}
+    } | merge( link.attr, true ) -%}
 
 {#  data : { parent: node.hasDescendants ? true : null },
     node.active ? "is-active" : null #}
 
     {{- tag( link.tag ?? 'a', {
-        html: tag( link.label.tag ?? list.node.label.tag ?? 'span', { html: node.title ??? '', ...link.label.attr ?? {} } ),
+        html: tag( link.label.tag ?? list.node.label.tag ?? 'span', { html: node.title ??? '', ...link.label.attr } ),
         href: node.url,
         ...params
     }) -}}
@@ -53,12 +65,17 @@
 
 {%- block passive -%}
     {%- set node = node ?? null -%}
-
     {{- tag( passive.tag ?? 'div', {
-        html: tag( passive.label.tag ?? list.node.tag ?? 'h4', { html: node.title ??? '', ...passive.label.attr ?? {} } ),
+        html: tag( passive.label.tag ?? list.node.tag ?? 'h4', { html: node.title ??? '', ...passive.label.attr } ),
         href: node.url,
-        ...passive.attr ?? list.node.attr ?? {}
+        ...passive.attr
     }) -}}
+
+    {# {{- tag( passive.tag ?? 'div', {
+        html: tag( passive.label.tag ?? list.node.tag ?? 'h4', { html: node.title ??? '', ...passive.label.attr } ),
+        href: node.url,
+        ...passive.attr ?? list.node.attr
+    }) -}} #}
 {%- endblock -%}
 
 
@@ -75,8 +92,14 @@
     {%- set tmpl = varargs.template ?? _self -%}
     {%- set defs = ( block( "defs", tmpl ) | jsonc_decode ) -%}
 
-    {%- set menu = defs["menu"] ?? {} -%}
-    {%- set menu = menu|merge( defs["#{prefix}_#{choice}"] ?? {} ) -%}
+    {# {%- set menu = defs["menu"] ?? {} -%}
+    {%- set menu = menu|merge( defs["#{prefix}_#{choice}"] ?? {} ) -%} #}
+    {# {%- set menu = defs["menu"] -%}
+    {%- set menu = menu|merge( defs["#{prefix}_#{choice}"] ?? [] ) -%} #}
+
+    {# {%- set defs1 = [prefix,varargs.format ?? null] | filter | join('_') -%}
+    {%- set defs2 = [prefix,varargs.menu   ?? null] | filter | join('_') -%} #}
+    {# {%- set menu = [prefix,choice] | filter | join('_') -%} #}
 
     {%- set params = { nav: {
         attr: {
@@ -85,16 +108,17 @@
                 label: navobj.name ?? "#{varargs.menu ?? ''|title} Navigation"
             }
         }
-    } } -%}
+    } } | merge( defs["menu"] ?? [], true )
+        | merge( defs["menu_#{choice}"] ?? [], true )
+        | merge( varargs, true ) -%}
 
-    {%- set params = params | merge( defs[prefix] ?? {}, true ) -%}
-    {%- set params = params | merge( defs["#{prefix}_#{varargs.format ?? null}"] ?? {}, true ) -%}
-    {%- set params = params | merge( defs["#{prefix}_#{varargs.menu   ?? null}"] ?? {}, true ) -%}
-    {%- set params = params | merge( defs["#{prefix}_#{choice}"] ?? {}, true ) -%}
-    {%- set params = params | merge( varargs, true ) -%}
+    {# {%- set params = params  -%}
+    {%- set params = params  -%}
+    {# {%- set params = params | merge( defs[defs2]  ?? [], true ) -%}
+    {%- set params = params | merge( defs[defs3]  ?? [], true ) -%} #}
+    {# {%- set params = params  -%} #}
 
     {{- nodes ? include( tmpl, { nodes: nodes, ...params }, withContext = false ) -}}
-
 {%- endmacro -%}
 
 

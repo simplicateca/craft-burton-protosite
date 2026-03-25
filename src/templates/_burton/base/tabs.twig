@@ -4,10 +4,10 @@
 {---------------------------------------------------------------------------------------}
 
 {-------------------------------------------------------------------------------------##}
-{%- set settings  = settings ??? {} %}
-{%- set headertag = headertag ??? 'h3' %}
+{%- set settings  = settings  ?? {} %}
+{%- set headertag = headertag ?? 'h3' %}
 
-{%- set items = items ??? [] %}
+{%- set items = items ?? [] %}
 {%- set count = items | length %}
 {%- set uuid  = "tabs#{random()}" -%}
 

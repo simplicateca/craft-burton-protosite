@@ -104,10 +104,15 @@
 {## Image with Caption
 {-------------------------------------------------------------------------------------##}
 {%- macro image__caption( images, settings ) -%}
+    {# {{ _self.default( images, {
+        caption: true,
+        captionclass: "py-3 border-b-4 border-theme-surface",
+    } | merge( settings ?? {} ) ) }} #}
+
     {{ _self.default( images, {
         caption: true,
         captionclass: "py-3 border-b-4 border-theme-surface",
-    } | merge( settings ?? {} ) ) }}
+    } | merge( settings ) ) }}
 {%- endmacro -%}
 
 

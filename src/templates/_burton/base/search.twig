@@ -90,7 +90,8 @@
     {%- set prevUrl = pageinfo.prevUrl -%}
     {%- set nextUrl = pageinfo.nextUrl -%}
     {%- set queryParams = craft.app.request.queryParams|withoutKey('page') -%}
-    {%- set htmx = varargs.htmx ?? {} -%}
+    {# {%- set htmx = varargs.htmx ?? {} -%} #}
+    {%- set htmx = varargs.htmx -%}
 
     {%- if pageinfo.totalPages > 1 -%}
         <nav

@@ -8,7 +8,8 @@
 
 {## [Partial] Base Template
 {---------------------------------------------------------------------------##}
-{%- block output _self.tagOrRaw( content ?? null, tag ?? null, attr ?? {} ) -%}
+{# {%- block output _self.tagOrRaw( content ?? null, tag ?? null, attr ?? {} ) -%} #}
+{%- block output _self.tagOrRaw( content ?? null, tag ?? null, attr ) -%}
 
 
 
@@ -20,7 +21,8 @@
     {%- set tmpl = varargs.template ?? _self -%}
     {%- set defs = ( block( "defs", tmpl ) | jsonc_decode ) -%}
 
-    {%- set params = ( defs["#{prefix}_#{choice}"] ?? defs[prefix] ?? {} ) -%}
+    {# {%- set params = ( defs["#{prefix}_#{choice}"] ?? defs[prefix] ?? {} ) -%} #}
+    {%- set params = ( defs["#{prefix}_#{choice}"] ?? defs[prefix] ) -%}
     {%- set params = params | merge( varargs, true ) -%}
 
     {{- include( tmpl, { content: "", ...params }, withContext = false ) -}}

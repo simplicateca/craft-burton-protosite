@@ -70,6 +70,7 @@ class MacroChainTwig extends AbstractExtension
             }
         }
 
-        return null;
+        Craft::info("Nothing to Render for '{$macroName}' does not exist in '{$templateName}'", __METHOD__);
+        return "";
     }
 }

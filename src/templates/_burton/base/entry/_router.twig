@@ -6,7 +6,8 @@
 {%- set slug = ( entry.slug ?? '' ) | slugify -%}
 
 {%- if type == 'redirect' -%}
-    {%- set destination = ( entry.entries.one() ?? {} ).url ?? entry.website ?? null -%}
+    {%- set redirect_entry = entry.entries.first() -%}
+    {%- set destination = redirect_entry.url ?? entry.website ?? null -%}
     {%- if destination is not empty and entry.type.handle ?? null  == 'redirect' -%}
         {%- redirect destination -%}
     {%- else -%}

@@ -21,7 +21,7 @@
                 html: ( content.header ?? null ) | trim,
                 class: ["w-full @container mb-16"]
             }
-        } | merge( header ?? {}, true ) -%}
+        } | merge( header, true ) -%}
 
         {%- if header.attr.html is empty and header.force ?? null -%}
             {%- set header = header | merge({ attr: { html: '<!-- Header -->' } }, true) -%}
@@ -41,7 +41,7 @@
                     : ( block('zone1') ~ block('zone2') ) | trim,
                 class: ["w-full flex flex-col zone-gap"]
             }
-        } | merge( zones ?? {}, true ) -%}
+        } | merge( zones, true ) -%}
 
         {{- zones.attr.html is not empty ? zones.tag is empty
             ? raw( zones.attr.html )
@@ -57,7 +57,7 @@
                 html: (content.footer ?? null) | trim,
                 class: ["w-full @container"]
             }
-        } | merge( footer ?? {}, true ) -%}
+        } | merge( footer, true ) -%}
 
         {%- if footer.attr.html is empty and footer.force ?? null -%}
             {%- set footer = footer | merge({ attr: { html: '<!-- Footer -->' } }, true) -%}
@@ -79,7 +79,7 @@
             html: (content.zone1 ?? null) | trim,
             class: ["w-full @container/zone"]
         }
-    } | merge( zone1 ?? {}, true ) -%}
+    } | merge( zone1, true ) -%}
 
     {%- if zone1.attr.html is empty and zone1.force ?? null -%}
         {%- set zone1 = zone1 | merge({ attr: { html: '<!-- Zone 1 -->' } }, true) -%}
@@ -103,7 +103,7 @@
                 knockout: knockout ?? null
             }
         }
-    } | merge( zone2 ?? {}, true ) -%}
+    } | merge( zone2, true ) -%}
 
     {%- if zone2.attr.html is empty and zone2.force ?? null -%}
         {%- set zone2 = zone2 | merge({ attr: { html: '<!-- Zone 2 -->' } }, true) -%}

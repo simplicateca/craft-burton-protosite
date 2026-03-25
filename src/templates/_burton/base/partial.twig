@@ -13,7 +13,6 @@
 
 {## --------------------------------------------------------------------------}
 {§§ 3.0 ➜ Utility Functions ------------------------------------------------##}
-
 {%- macro trigger() -%}
     {%- set button = {
         class: ["flex bg-none p-0 m-0 text-theme-link hover:text-theme-link-hover focus:text-link-hover"],
@@ -43,7 +42,8 @@
     {%- set items = items[0] ?? null ? items : [items] -%}
     {%- set items = items | filter [0:limit] -%}
 
-    {{ _self.tagOrRaw( _self.unpack( items ), varargs.tag ?? null, varargs.attr ?? {} ) }}
+    {# {{ _self.tagOrRaw( _self.unpack( items ), varargs.tag ?? null, varargs.attr ?? {} ) }} #}
+    {{ _self.tagOrRaw( _self.unpack( items ), varargs.tag ?? null, varargs.attr ) }}
 {%- endmacro -%}
 
 
@@ -107,11 +107,18 @@
         {%- endfor -%}
         {{- result | json_encode | raw  -}}
     {%- else -%}
-        {%- set result = collect(groups[type] ?? []).map( (k,v) => {
+        {# {%- set result = collect(groups[type] ?? []).map( (k,v) => {
             value: v,
             label: k.label ?? v,
             settings: k.settings ?? {},
             constants: k.constants ?? {}
+        }).values().all() -%} #}
+
+        {%- set result = collect(groups[type] ?? []).map( (k,v) => {
+            value: v,
+            label: k.label ?? v,
+            settings: k.settings,
+            constants: k.constants
         }).values().all() -%}
         {{- result | json_encode | raw -}}
     {%- endif -%}

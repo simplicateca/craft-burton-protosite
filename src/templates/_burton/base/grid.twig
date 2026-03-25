@@ -12,13 +12,15 @@
     {%- set tmpl = varargs.template ?? _self -%}
     {%- set defs = ( block( "defs", tmpl ) | jsonc_decode ) -%}
 
-    {%- set params = ( defs["#{prefix}_#{grid}"] ?? defs[prefix] ?? {} ) -%}
+    {# {%- set params = ( defs["#{prefix}_#{grid}"] ?? defs[prefix] ?? {} ) -%} #}
+    {%- set params = ( defs["#{prefix}_#{grid}"] ?? defs[prefix] ) -%}
     {%- set params = params | merge( varargs, true ) -%}
 
     {%- if content is iterable and params.length ?? null -%}
         {%- set count = content|length|default(0) -%}
         {%- set count = params.minCols ?? 0 > count ? params.minCols : count -%}
-        {%- set match = params.length[count] ?? params.length["+"] ?? {} -%}
+        {# {%- set match = params.length[count] ?? params.length["+"] ?? {} -%} #}
+        {%- set match = params.length[count] ?? params.length["+"] -%}
         {%- set params = params | merge( match, true ) -%}
     {%- endif -%}
 

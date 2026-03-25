@@ -25,7 +25,8 @@
     {%- set defs = ( block( "defs", path ) | jsonc_decode ) -%}
 
     {%- set params = { content: content, theme: theme, loop: loop, attr: { data: { theme: theme } } } -%}
-    {%- set params = params | merge( defs["#{prefix}_#{theme}"] ?? defs[prefix] ?? {}, true) -%}
+    {# {%- set params = params | merge( defs["#{prefix}_#{theme}"] ?? defs[prefix] ?? {}, true) -%} #}
+    {%- set params = params | merge( defs["#{prefix}_#{theme}"] ?? defs[prefix], true) -%}
     {%- set params = params | merge( varargs, true ) -%}
 
     {{- content is not empty ? include( path, params, withContext = false ) -}}

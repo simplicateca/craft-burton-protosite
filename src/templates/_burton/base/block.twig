@@ -378,7 +378,7 @@
     {%- set form = craft.formie.forms({ handle: block.component.handle }).one() %}
     {%- if form -%}
         {% do craft.formie.populateFormValues( form, { parentEntry: block.primaryOwnerId ?? null } ) %}
-        {{- craft.formie.renderForm( form, { themeConfig: varargs.themeConfig ?? {} } ) -}}
+        {{- craft.formie.renderForm( form, { themeConfig: varargs.themeConfig } ) -}}
     {%- endif -%}
 {%- endmacro -%}
 
